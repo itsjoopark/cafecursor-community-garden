@@ -19,7 +19,7 @@ export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarPr
 
   return (
     <div 
-      className="border border-[#f0efea] border-solid box-border flex flex-col gap-[10px] p-[10px] rounded-[8px] bg-[#d4cdb8]/80 backdrop-blur-sm" 
+      className="border border-gray-300 border-solid box-border flex flex-col gap-[10px] p-[10px] rounded-[8px] bg-white/60 backdrop-blur-sm shadow-lg" 
       data-name="Frame_Add_Stickie_Note" 
       data-node-id="49:83"
     >
@@ -31,8 +31,8 @@ export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarPr
         {/* Dark/Black Card Option */}
         <button
           onClick={() => handleColorClick('dark')}
-          className={`bg-[#14120b] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
-            lastClicked === 'dark' ? 'ring-2 ring-[#f0efea] ring-offset-2 ring-offset-[#d4cdb8] scale-95' : ''
+          className={`bg-[#14120b] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer shadow-md ${
+            lastClicked === 'dark' ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white scale-95' : ''
           }`}
           data-node-id="49:81"
           aria-label="Add dark card"
@@ -42,8 +42,8 @@ export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarPr
         {/* Light/White Card Option */}
         <button
           onClick={() => handleColorClick('light')}
-          className={`bg-[#f0efea] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
-            lastClicked === 'light' ? 'ring-2 ring-[#14120b] ring-offset-2 ring-offset-[#d4cdb8] scale-95' : ''
+          className={`bg-[#f0efea] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer shadow-md ${
+            lastClicked === 'light' ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white scale-95' : ''
           }`}
           data-node-id="49:82"
           aria-label="Add light card"

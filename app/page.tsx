@@ -3,9 +3,6 @@
 import { useState, useRef, useEffect } from 'react'
 import CursorCard from '@/components/CursorCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
-import Image from 'next/image'
-
-const backgroundImage = "/assets/bf81fb310ab67aad2f37c27fd1bf667e26c403bc.png"
 
 interface Card {
   id: string
@@ -16,9 +13,13 @@ interface Card {
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const canvasRef = useRef<HTMLDivElement>(null)
+
+  const MIN_ZOOM = 0.1
+  const MAX_ZOOM = 3
 
   const handleAddCard = (variant: 'dark' | 'light') => {
     // Add cards at center of current viewport
@@ -67,6 +68,48 @@ export default function Home() {
     setIsPanning(false)
   }
 
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault()
+    
+    const delta = e.deltaY * -0.001
+    const newZoom = Math.min(Math.max(zoom + delta, MIN_ZOOM), MAX_ZOOM)
+    
+    if (newZoom !== zoom) {
+      // Get mouse position relative to viewport
+      const rect = canvasRef.current?.getBoundingClientRect()
+      if (rect) {
+        const mouseX = e.clientX - rect.left
+        const mouseY = e.clientY - rect.top
+        
+        // Calculate the point in world space before zoom
+        const worldX = (mouseX - canvasOffset.x) / zoom
+        const worldY = (mouseY - canvasOffset.y) / zoom
+        
+        // Calculate new offset to keep the same world point under the mouse
+        const newOffsetX = mouseX - worldX * newZoom
+        const newOffsetY = mouseY - worldY * newZoom
+        
+        setCanvasOffset({ x: newOffsetX, y: newOffsetY })
+      }
+      
+      setZoom(newZoom)
+    }
+  }
+
+  const handleZoomIn = () => {
+    const newZoom = Math.min(zoom * 1.2, MAX_ZOOM)
+    setZoom(newZoom)
+  }
+
+  const handleZoomOut = () => {
+    const newZoom = Math.max(zoom / 1.2, MIN_ZOOM)
+    setZoom(newZoom)
+  }
+
+  const handleResetZoom = () => {
+    setZoom(1)
+  }
+
   useEffect(() => {
     if (isPanning) {
       window.addEventListener('mousemove', handleMouseMove)
@@ -79,11 +122,23 @@ export default function Home() {
     }
   }, [isPanning, panStart, canvasOffset])
 
+  useEffect(() => {
+    // Add wheel event listener for zooming
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.addEventListener('wheel', handleWheel, { passive: false })
+      
+      return () => {
+        canvas.removeEventListener('wheel', handleWheel)
+      }
+    }
+  }, [zoom, canvasOffset])
+
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
       {/* Fixed Header - Anchored to top with 50px gap */}
       <div 
-        className="fixed top-[50px] left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center p-[10px] rounded-[9px] bg-[#d4cdb8]/80 backdrop-blur-sm"
+        className="fixed top-[50px] left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center p-[10px] rounded-[9px] bg-white/60 backdrop-blur-sm shadow-lg"
         data-node-id="48:29"
       >
         <h1 
@@ -100,39 +155,33 @@ export default function Home() {
         className="absolute inset-0 z-0 touch-none"
         onMouseDown={handleCanvasMouseDown}
       >
-        {/* Tiled Background Pattern */}
+        {/* Solid Background Color */}
         <div 
           className="absolute inset-0"
           style={{
-            backgroundImage: `url(${backgroundImage})`,
-            backgroundSize: '1728px 1117px',
-            backgroundRepeat: 'repeat',
-            backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
+            backgroundColor: '#d0cac0',
             width: '100%',
             height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
           }}
         />
         
-        {/* Subtle Grid Overlay for infinite canvas feel */}
+        {/* Dotted Grid Overlay for infinite canvas feel */}
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 origin-top-left"
           style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(20, 18, 11, 0.05) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(20, 18, 11, 0.05) 1px, transparent 1px)
-            `,
-            backgroundSize: '100px 100px',
-            backgroundPosition: `${canvasOffset.x % 100}px ${canvasOffset.y % 100}px`,
+            backgroundImage: `radial-gradient(circle, rgba(20, 18, 11, 0.35) 2px, transparent 2px)`,
+            backgroundSize: `${100 * zoom}px ${100 * zoom}px`,
+            backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
             cursor: isPanning ? 'grabbing' : 'grab',
           }}
         />
         
         {/* Canvas Content - Cards Layer */}
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 origin-top-left"
           style={{
-            transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px)`,
+            transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
           {/* Render all cards at their world positions */}
@@ -177,6 +226,34 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Zoom Controls - Fixed at bottom right */}
+      <div className="fixed bottom-[50px] right-[50px] z-30 flex flex-col gap-2">
+        <button
+          onClick={handleZoomIn}
+          className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] text-2xl font-bold hover:bg-white/80 transition-colors shadow-lg"
+          aria-label="Zoom in"
+          title="Zoom in"
+        >
+          +
+        </button>
+        <button
+          onClick={handleResetZoom}
+          className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] text-xs font-medium hover:bg-white/80 transition-colors shadow-lg"
+          aria-label="Reset zoom"
+          title="Reset zoom (100%)"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <button
+          onClick={handleZoomOut}
+          className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] text-2xl font-bold hover:bg-white/80 transition-colors shadow-lg"
+          aria-label="Zoom out"
+          title="Zoom out"
+        >
+          −
+        </button>
       </div>
 
       {/* Fixed Sticky Note Toolbar - Bottom with 50px gap */}
