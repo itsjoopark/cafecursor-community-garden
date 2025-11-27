@@ -48,6 +48,21 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
     setDragOffset({ x: 0, y: 0 })
   }
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't start drag if touching text area
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') {
+      return
+    }
+    
+    const touch = e.touches[0]
+    setIsDragging(false)
+    setDragStart({
+      x: touch.clientX,
+      y: touch.clientY,
+    })
+    setDragOffset({ x: 0, y: 0 })
+  }
+
   const handleMouseMove = (e: MouseEvent) => {
     if (dragStart.x !== 0 || dragStart.y !== 0) {
       const deltaX = e.clientX - dragStart.x
@@ -65,7 +80,42 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
     }
   }
 
+  const handleTouchMove = (e: TouchEvent) => {
+    if (dragStart.x !== 0 || dragStart.y !== 0) {
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - dragStart.x
+      const deltaY = touch.clientY - dragStart.y
+      
+      // If moved more than 5px, consider it a drag
+      if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+        setIsDragging(true)
+        e.preventDefault() // Prevent scrolling while dragging
+      }
+      
+      setDragOffset({
+        x: deltaX,
+        y: deltaY,
+      })
+    }
+  }
+
   const handleMouseUp = () => {
+    if (isDragging && onPositionChange) {
+      // Report final position change to parent
+      onPositionChange({
+        x: initialPosition.x + dragOffset.x,
+        y: initialPosition.y + dragOffset.y,
+      })
+    }
+    
+    setDragStart({ x: 0, y: 0 })
+    setDragOffset({ x: 0, y: 0 })
+    
+    // Reset dragging state after a short delay to prevent flip on drag end
+    setTimeout(() => setIsDragging(false), 100)
+  }
+
+  const handleTouchEnd = () => {
     if (isDragging && onPositionChange) {
       // Report final position change to parent
       onPositionChange({
@@ -120,14 +170,18 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
   }, [isEditing])
 
   useEffect(() => {
-    // Add global mouse event listeners for dragging
+    // Add global mouse and touch event listeners for dragging
     if (dragStart.x !== 0 || dragStart.y !== 0) {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('touchmove', handleTouchMove, { passive: false })
+      window.addEventListener('touchend', handleTouchEnd)
       
       return () => {
         window.removeEventListener('mousemove', handleMouseMove)
         window.removeEventListener('mouseup', handleMouseUp)
+        window.removeEventListener('touchmove', handleTouchMove)
+        window.removeEventListener('touchend', handleTouchEnd)
       }
     }
   }, [dragStart, dragOffset, isDragging, initialPosition, onPositionChange])
@@ -135,7 +189,7 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
   return (
     <div 
       ref={cardRef}
-      className="relative w-full h-full"
+      className="relative w-full h-full touch-none"
       style={{ 
         perspective: '1000px',
         transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
@@ -145,6 +199,7 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
       }}
       onClick={handleCardClick}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
       <div 
         className="relative w-full h-full transition-all duration-700 hover:animate-wiggle"
@@ -204,11 +259,17 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
             onChange={handleTextChange}
             onBlur={handleBlur}
             onClick={handleTextAreaClick}
+            onTouchStart={(e) => {
+              e.stopPropagation()
+              handleTextAreaClick(e as any)
+            }}
             onKeyDown={handleKeyDown}
             readOnly={!isEditing}
-            className={`w-full h-full bg-transparent border-none outline-none resize-none font-['Cursor_Gothic:Italic',sans-serif] italic leading-relaxed ${textColor} text-[16px] sm:text-[18px] md:text-[20px] text-center ${placeholderColor} placeholder:opacity-70 ${isEditing ? 'cursor-text' : 'cursor-pointer'}`}
+            className={`w-full h-full bg-transparent border-none outline-none resize-none font-['Cursor_Gothic:Italic',sans-serif] italic leading-relaxed ${textColor} text-[16px] sm:text-[18px] md:text-[20px] text-center ${placeholderColor} placeholder:opacity-70 ${isEditing ? 'cursor-text touch-auto' : 'cursor-pointer touch-auto'}`}
             style={{
               caretColor: caretColor,
+              WebkitUserSelect: isEditing ? 'text' : 'none',
+              touchAction: isEditing ? 'auto' : 'none',
             }}
             placeholder="Type your message..."
             data-node-id="46:19"

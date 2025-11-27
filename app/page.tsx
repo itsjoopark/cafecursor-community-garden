@@ -55,6 +55,21 @@ export default function Home() {
     }
   }
 
+  const handleCanvasTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    // Check if touching on the background layer or grid (not on cards)
+    const target = e.target as HTMLElement
+    const isCardOrChild = target.closest('[data-card-container]')
+    
+    if (!isCardOrChild) {
+      const touch = e.touches[0]
+      setIsPanning(true)
+      setPanStart({
+        x: touch.clientX - canvasOffset.x,
+        y: touch.clientY - canvasOffset.y,
+      })
+    }
+  }
+
   const handleMouseMove = (e: MouseEvent) => {
     if (isPanning) {
       setCanvasOffset({
@@ -64,7 +79,22 @@ export default function Home() {
     }
   }
 
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isPanning) {
+      const touch = e.touches[0]
+      setCanvasOffset({
+        x: touch.clientX - panStart.x,
+        y: touch.clientY - panStart.y,
+      })
+      e.preventDefault() // Prevent scrolling while panning
+    }
+  }
+
   const handleMouseUp = () => {
+    setIsPanning(false)
+  }
+
+  const handleTouchEnd = () => {
     setIsPanning(false)
   }
 
@@ -114,10 +144,14 @@ export default function Home() {
     if (isPanning) {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
+      window.addEventListener('touchmove', handleTouchMove, { passive: false })
+      window.addEventListener('touchend', handleTouchEnd)
       
       return () => {
         window.removeEventListener('mousemove', handleMouseMove)
         window.removeEventListener('mouseup', handleMouseUp)
+        window.removeEventListener('touchmove', handleTouchMove)
+        window.removeEventListener('touchend', handleTouchEnd)
       }
     }
   }, [isPanning, panStart, canvasOffset])
@@ -152,8 +186,9 @@ export default function Home() {
       {/* Infinite Canvas - Pannable Background */}
       <div 
         ref={canvasRef}
-        className="absolute inset-0 z-0 touch-none"
+        className="absolute inset-0 z-0"
         onMouseDown={handleCanvasMouseDown}
+        onTouchStart={handleCanvasTouchStart}
       >
         {/* Solid Background Color */}
         <div 
