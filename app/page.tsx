@@ -248,7 +248,7 @@ export default function Home() {
             <div 
               key={card.id}
               data-card-container
-              className="absolute w-[280px] md:w-[339px] h-[340px] md:h-[402px]"
+              className="absolute w-[281px] h-[333.221px]"
               style={{
                 left: '50%',
                 top: '50%',

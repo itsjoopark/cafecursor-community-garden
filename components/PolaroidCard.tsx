@@ -218,38 +218,40 @@ export default function PolaroidCard({
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
-      {/* Desktop Layout */}
-      <div className="hidden md:block relative w-full h-full">
+      {/* Desktop & Tablet Layout */}
+      <div className="relative w-full h-full">
         <div 
-          className="bg-white overflow-clip rounded-[3.5px] w-[339px] h-[402px] shadow-lg"
+          className="bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] shadow-lg border border-[#d9d9d9]"
+          style={{ borderWidth: '0.829px' }}
           data-name="Polaroid Card - Backpane (White)"
-          data-node-id="68:15"
+          data-node-id="70:76"
         >
           {/* Image Frame */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[300px] h-[300px] top-[19px] cursor-pointer hover:opacity-90 transition-opacity"
+            className="absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] cursor-pointer hover:opacity-90 transition-opacity"
             data-name="Image Frame"
-            data-node-id="68:18"
+            data-node-id="70:77"
             data-image-frame
             onClick={handleImageClick}
           >
             <img 
               src={imageUrl}
               alt="Polaroid"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="block w-full h-full object-cover"
             />
             {imageUrl === placeholderImage && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/5 pointer-events-none">
-                <span className="text-gray-400 text-sm">Click to upload</span>
+                <span className="text-gray-400 text-xs">Click to upload</span>
               </div>
             )}
           </div>
 
           {/* Text Area */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 top-[337px] w-[300px] flex flex-col gap-1 text-center"
+            className="absolute left-1/2 transform -translate-x-1/2 top-[278.51px] w-[248.673px] flex flex-col text-center"
+            style={{ gap: '3.316px' }}
             data-name="Text"
-            data-node-id="68:27"
+            data-node-id="70:79"
           >
             {/* Title */}
             {isEditingTitle ? (
@@ -259,14 +261,16 @@ export default function PolaroidCard({
                 value={title}
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
-                className="font-cursor-gothic-bold text-[16px] text-black w-full text-center bg-transparent border-none outline-none"
-                data-node-id="68:25"
+                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
+                style={{ fontSize: '13.263px' }}
+                data-node-id="70:80"
               />
             ) : (
               <p 
-                className="font-cursor-gothic-bold text-[16px] text-black cursor-text"
+                className="font-cursor-gothic-bold text-black cursor-text"
+                style={{ fontSize: '13.263px' }}
                 onClick={handleTitleClick}
-                data-node-id="68:25"
+                data-node-id="70:80"
               >
                 {title}
               </p>
@@ -280,14 +284,16 @@ export default function PolaroidCard({
                 value={description}
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-[12px] text-black w-full text-center bg-transparent border-none outline-none"
-                data-node-id="68:26"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
+                style={{ fontSize: '9.947px' }}
+                data-node-id="70:81"
               />
             ) : (
               <p 
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-[12px] text-black cursor-text"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text"
+                style={{ fontSize: '9.947px' }}
                 onClick={handleDescriptionClick}
-                data-node-id="68:26"
+                data-node-id="70:81"
               >
                 {description}
               </p>
@@ -296,83 +302,6 @@ export default function PolaroidCard({
         </div>
       </div>
 
-      {/* Mobile Layout */}
-      <div className="block md:hidden relative w-full h-full">
-        <div 
-          className="bg-white overflow-clip rounded-[2.889px] w-full h-full shadow-lg"
-          data-name="Polaroid Card - Backpane (White)"
-          data-node-id="68:35"
-        >
-          {/* Image Frame */}
-          <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-32px)] aspect-square top-[15.69px] cursor-pointer hover:opacity-90 transition-opacity"
-            data-name="Image Frame"
-            data-node-id="68:36"
-            data-image-frame
-            onClick={handleImageClick}
-          >
-            <img 
-              src={imageUrl}
-              alt="Polaroid"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            {imageUrl === placeholderImage && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/5 pointer-events-none">
-                <span className="text-gray-400 text-xs">Tap to upload</span>
-              </div>
-            )}
-          </div>
-
-          {/* Text Area */}
-          <div 
-            className="absolute left-1/2 transform -translate-x-1/2 bottom-4 w-[calc(100%-32px)] flex flex-col gap-[3.304px] text-center"
-            data-name="Text"
-            data-node-id="68:37"
-          >
-            {/* Title */}
-            {isEditingTitle ? (
-              <input
-                ref={titleRef}
-                type="text"
-                value={title}
-                onChange={handleTitleChange}
-                onBlur={handleTitleBlur}
-                className="font-cursor-gothic-bold text-[13.215px] text-black w-full text-center bg-transparent border-none outline-none"
-                data-node-id="68:38"
-              />
-            ) : (
-              <p 
-                className="font-cursor-gothic-bold text-[13.215px] text-black cursor-text"
-                onClick={handleTitleClick}
-                data-node-id="68:38"
-              >
-                {title}
-              </p>
-            )}
-            
-            {/* Description */}
-            {isEditingDescription ? (
-              <input
-                ref={descriptionRef}
-                type="text"
-                value={description}
-                onChange={handleDescriptionChange}
-                onBlur={handleDescriptionBlur}
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-[9.912px] text-black w-full text-center bg-transparent border-none outline-none"
-                data-node-id="68:39"
-              />
-            ) : (
-              <p 
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-[9.912px] text-black cursor-text"
-                onClick={handleDescriptionClick}
-                data-node-id="68:39"
-              >
-                {description}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Hidden File Input */}
       <input
