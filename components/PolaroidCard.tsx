@@ -34,10 +34,14 @@ export default function PolaroidCard({
   const [title, setTitle] = useState(initialTitle)
   const [description, setDescription] = useState(initialDescription)
   const [imageUrl, setImageUrl] = useState(initialImageUrl)
+  const [dateStamp, setDateStamp] = useState('')
   const cardRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Check if image has been customized (not the default)
+  const hasCustomImage = imageUrl !== defaultImageFrame
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Don't start drag if clicking on input fields or image
@@ -170,6 +174,13 @@ export default function PolaroidCard({
         const result = reader.result as string
         setImageUrl(result)
         onImageChange?.(result)
+        
+        // Set date stamp to current date when image is uploaded
+        const now = new Date()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const year = now.getFullYear()
+        setDateStamp(`${month}/${day}/${year}`)
       }
       reader.readAsDataURL(file)
     }
@@ -228,9 +239,9 @@ export default function PolaroidCard({
         >
           {/* Image Frame */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] cursor-pointer hover:opacity-90 transition-opacity"
+            className="absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] cursor-pointer hover:opacity-90 transition-opacity bg-[#14120b] overflow-hidden"
             data-name="Image Frame"
-            data-node-id="70:77"
+            data-node-id="70:97"
             data-image-frame
             onClick={handleImageClick}
           >
@@ -239,6 +250,16 @@ export default function PolaroidCard({
               alt="Polaroid"
               className="block w-full h-full object-cover"
             />
+            
+            {/* Date Stamp - Only shows when custom image is uploaded */}
+            {hasCustomImage && dateStamp && (
+              <p 
+                className="absolute bottom-[25.42px] right-[45.75px] transform translate-x-1/2 translate-y-full font-['Cursor_Gothic:Italic',sans-serif] italic leading-normal text-[#f69c00] text-[10px] text-center whitespace-nowrap"
+                data-node-id="70:104"
+              >
+                {dateStamp}
+              </p>
+            )}
           </div>
 
           {/* Text Area */}
@@ -306,7 +327,7 @@ export default function PolaroidCard({
         >
           {/* Image Frame */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] cursor-pointer hover:opacity-90 transition-opacity"
+            className="absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] cursor-pointer hover:opacity-90 transition-opacity bg-[#14120b] overflow-hidden"
             data-name="Image Frame"
             data-image-frame
             onClick={handleImageClick}
@@ -316,6 +337,15 @@ export default function PolaroidCard({
               alt="Polaroid"
               className="block w-full h-full object-cover"
             />
+            
+            {/* Date Stamp - Only shows when custom image is uploaded */}
+            {hasCustomImage && dateStamp && (
+              <p 
+                className="absolute bottom-[21px] right-[38px] transform translate-x-1/2 translate-y-full font-['Cursor_Gothic:Italic',sans-serif] italic leading-normal text-[#f69c00] text-[8.3px] text-center whitespace-nowrap"
+              >
+                {dateStamp}
+              </p>
+            )}
           </div>
 
           {/* Text Area */}
