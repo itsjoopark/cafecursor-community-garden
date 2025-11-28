@@ -202,7 +202,7 @@ export default function Home() {
         <div 
           className="absolute inset-0"
           style={{
-            backgroundColor: '#d0cac0',
+            backgroundColor: '#F0EFEA',
             width: '100%',
             height: '100%',
             cursor: isPanning ? 'grabbing' : 'grab',
