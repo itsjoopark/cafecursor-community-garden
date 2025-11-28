@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import CursorCard from '@/components/CursorCard'
+import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
 
 interface Card {
   id: string
   variant: 'dark' | 'light'
   position: { x: number; y: number }
-  text: string
+  title: string
+  description: string
+  imageUrl: string
 }
 
 export default function Home() {
@@ -31,7 +33,9 @@ export default function Home() {
         x: -canvasOffset.x + (Math.random() * 200 - 100), // Add in viewport center with slight offset
         y: -canvasOffset.y + (Math.random() * 200 - 100)
       },
-      text: ''
+      title: 'Title',
+      description: 'description',
+      imageUrl: '/assets/4d511e8491dcfb5bbcdcade91e90151c344502b6.png'
     }
     setCards([...cards, newCard])
   }
@@ -42,9 +46,21 @@ export default function Home() {
     ))
   }
 
-  const handleCardTextChange = (cardId: string, newText: string) => {
+  const handleCardTitleChange = (cardId: string, newTitle: string) => {
     setCards(cards.map(card =>
-      card.id === cardId ? { ...card, text: newText } : card
+      card.id === cardId ? { ...card, title: newTitle } : card
+    ))
+  }
+
+  const handleCardDescriptionChange = (cardId: string, newDescription: string) => {
+    setCards(cards.map(card =>
+      card.id === cardId ? { ...card, description: newDescription } : card
+    ))
+  }
+
+  const handleCardImageChange = (cardId: string, newImageUrl: string) => {
+    setCards(cards.map(card =>
+      card.id === cardId ? { ...card, imageUrl: newImageUrl } : card
     ))
   }
 
@@ -227,12 +243,12 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
-          {/* Render all cards at their world positions */}
+          {/* Render all Polaroid cards at their world positions */}
           {cards.map((card) => (
             <div 
               key={card.id}
               data-card-container
-              className="absolute w-[250px] sm:w-[300px] md:w-[350px] lg:w-[400px] h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]"
+              className="absolute w-[280px] md:w-[339px] h-[340px] md:h-[402px]"
               style={{
                 left: '50%',
                 top: '50%',
@@ -242,12 +258,15 @@ export default function Home() {
                 pointerEvents: 'auto',
               }}
             >
-              <CursorCard 
-                variant={card.variant}
+              <PolaroidCard 
                 initialPosition={card.position}
                 onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
-                initialText={card.text}
-                onTextChange={(newText) => handleCardTextChange(card.id, newText)}
+                initialTitle={card.title}
+                initialDescription={card.description}
+                initialImageUrl={card.imageUrl}
+                onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
+                onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
+                onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
               />
             </div>
           ))}
@@ -262,7 +281,7 @@ export default function Home() {
             >
               <div className="text-center px-4">
                 <p className="text-[#14120b] text-xl sm:text-2xl font-medium opacity-70 mb-2">
-                  Click a color in the toolbar below to add a sticky note
+                  Click a color in the toolbar below to add a polaroid card
                 </p>
                 <p className="text-[#14120b] text-base sm:text-lg opacity-50">
                   Drag the background to pan around the infinite canvas
