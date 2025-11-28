@@ -35,7 +35,7 @@ export default function Home() {
       },
       title: 'Title',
       description: 'description',
-      imageUrl: '/assets/4d511e8491dcfb5bbcdcade91e90151c344502b6.png'
+      imageUrl: '/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg'
     }
     setCards([...cards, newCard])
   }
@@ -248,7 +248,7 @@ export default function Home() {
             <div 
               key={card.id}
               data-card-container
-              className="absolute w-[281px] h-[333.221px]"
+              className="absolute w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]"
               style={{
                 left: '50%',
                 top: '50%',

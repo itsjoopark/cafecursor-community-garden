@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 
-const placeholderImage = "/assets/4d511e8491dcfb5bbcdcade91e90151c344502b6.png"
+const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
 
 interface PolaroidCardProps {
   initialPosition?: { x: number; y: number }
@@ -21,7 +21,7 @@ export default function PolaroidCard({
   onPositionChange,
   initialTitle = 'Title',
   initialDescription = 'description',
-  initialImageUrl = placeholderImage,
+  initialImageUrl = defaultImageFrame,
   onTitleChange,
   onDescriptionChange,
   onImageChange
@@ -218,8 +218,8 @@ export default function PolaroidCard({
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
-      {/* Desktop & Tablet Layout */}
-      <div className="relative w-full h-full">
+      {/* Desktop Layout */}
+      <div className="hidden md:block relative w-full h-full">
         <div 
           className="bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] shadow-lg border border-[#d9d9d9]"
           style={{ borderWidth: '0.829px' }}
@@ -239,11 +239,6 @@ export default function PolaroidCard({
               alt="Polaroid"
               className="block w-full h-full object-cover"
             />
-            {imageUrl === placeholderImage && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/5 pointer-events-none">
-                <span className="text-gray-400 text-xs">Click to upload</span>
-              </div>
-            )}
           </div>
 
           {/* Text Area */}
@@ -302,6 +297,77 @@ export default function PolaroidCard({
         </div>
       </div>
 
+      {/* Mobile Layout */}
+      <div className="block md:hidden relative w-full h-full">
+        <div 
+          className="bg-white overflow-clip rounded-[2.4px] w-full h-full shadow-lg border border-[#d9d9d9]"
+          style={{ borderWidth: '0.68px' }}
+          data-name="Polaroid Card - Backpane (White)"
+        >
+          {/* Image Frame */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] cursor-pointer hover:opacity-90 transition-opacity"
+            data-name="Image Frame"
+            data-image-frame
+            onClick={handleImageClick}
+          >
+            <img 
+              src={imageUrl}
+              alt="Polaroid"
+              className="block w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Text Area */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 bottom-4 w-[calc(100%-26px)] flex flex-col text-center"
+            style={{ gap: '2.75px' }}
+            data-name="Text"
+          >
+            {/* Title */}
+            {isEditingTitle ? (
+              <input
+                ref={titleRef}
+                type="text"
+                value={title}
+                onChange={handleTitleChange}
+                onBlur={handleTitleBlur}
+                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
+                style={{ fontSize: '11px' }}
+              />
+            ) : (
+              <p 
+                className="font-cursor-gothic-bold text-black cursor-text"
+                style={{ fontSize: '11px' }}
+                onClick={handleTitleClick}
+              >
+                {title}
+              </p>
+            )}
+            
+            {/* Description */}
+            {isEditingDescription ? (
+              <input
+                ref={descriptionRef}
+                type="text"
+                value={description}
+                onChange={handleDescriptionChange}
+                onBlur={handleDescriptionBlur}
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
+                style={{ fontSize: '8.25px' }}
+              />
+            ) : (
+              <p 
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text"
+                style={{ fontSize: '8.25px' }}
+                onClick={handleDescriptionClick}
+              >
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Hidden File Input */}
       <input
