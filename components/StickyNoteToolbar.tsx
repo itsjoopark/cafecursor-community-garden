@@ -23,24 +23,25 @@ export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarPr
 
   return (
     <div 
-      className="flex items-center justify-center" 
+      className="flex items-center justify-center touch-none select-none" 
       data-name="Frame_Photo_Capture_Button" 
       data-node-id="70:93"
     >
       <button
         onClick={handleCameraClick}
-        className={`relative w-[88px] h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
+        className={`relative w-[70px] h-[70px] sm:w-[88px] sm:h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer touch-auto ${
           isClicked ? 'scale-95' : ''
         }`}
         aria-label="Add polaroid card"
         title="Add new polaroid card"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <Image
           src={cameraButtonSvg}
           alt="Camera button"
           width={88}
           height={88}
-          className="w-full h-full"
+          className="w-full h-full drop-shadow-lg"
           priority
         />
       </button>

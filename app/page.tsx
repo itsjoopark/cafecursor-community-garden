@@ -320,8 +320,8 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Fixed Sticky Note Toolbar - Bottom with 50px gap */}
-      <div className="fixed bottom-[50px] left-1/2 transform -translate-x-1/2 z-30">
+      {/* Fixed Camera Button Toolbar - Bottom with 50px gap */}
+      <div className="fixed bottom-[50px] left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
         <StickyNoteToolbar onColorSelect={handleAddCard} />
       </div>
     </main>
