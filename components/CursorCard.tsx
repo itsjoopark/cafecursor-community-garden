@@ -9,18 +9,57 @@ interface CursorCardProps {
   variant?: 'dark' | 'light'
   initialPosition?: { x: number; y: number }
   onPositionChange?: (position: { x: number; y: number }) => void
+  initialText?: string
+  onTextChange?: (text: string) => void
 }
 
-export default function CursorCard({ variant = 'dark', initialPosition = { x: 0, y: 0 }, onPositionChange }: CursorCardProps) {
+export default function CursorCard({ 
+  variant = 'dark', 
+  initialPosition = { x: 0, y: 0 }, 
+  onPositionChange,
+  initialText = '',
+  onTextChange 
+}: CursorCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isEditing, setIsEditing] = useState(false)
+  const [text, setText] = useState(initialText)
   const cardRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Color variants
   const bgColor = variant === 'dark' ? 'bg-[#14120b]' : 'bg-[#f0efea]'
+  const textColor = variant === 'dark' ? 'text-[#f0efea]' : 'text-[#14120b]'
+  const placeholderColor = variant === 'dark' ? 'placeholder:text-[#f0efea]' : 'placeholder:text-[#14120b]'
+
+  const handleCardClick = () => {
+    // Only enter edit mode if not currently dragging
+    if (!isDragging && !isEditing) {
+      setIsEditing(true)
+    }
+  }
+
+  const handleTextAreaClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click event
+  }
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value
+    setText(newText)
+    onTextChange?.(newText)
+  }
+
+  const handleTextBlur = () => {
+    setIsEditing(false)
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Don't start drag if clicking on textarea
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') {
+      return
+    }
+
     setIsDragging(false)
     setDragStart({
       x: e.clientX,
@@ -30,6 +69,11 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
   }
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't start drag if touching textarea
+    if ((e.target as HTMLElement).tagName === 'TEXTAREA') {
+      return
+    }
+
     const touch = e.touches[0]
     setIsDragging(false)
     setDragStart({
@@ -108,6 +152,13 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
   }
 
   useEffect(() => {
+    // Focus textarea when entering edit mode
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [isEditing])
+
+  useEffect(() => {
     // Add global mouse and touch event listeners for dragging
     if (dragStart.x !== 0 || dragStart.y !== 0) {
       window.addEventListener('mousemove', handleMouseMove)
@@ -127,13 +178,13 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
   return (
     <div 
       ref={cardRef}
-      className="relative w-full h-full touch-none"
+      className="relative w-full h-full"
       style={{ 
         transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        userSelect: 'none',
+        cursor: isDragging ? 'grabbing' : (isEditing ? 'text' : 'grab'),
         transition: isDragging ? 'none' : 'transform 0.1s ease-out',
       }}
+      onClick={handleCardClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
@@ -142,7 +193,7 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
       >
         {/* Card */}
         <div 
-          className={`absolute inset-0 ${bgColor} rounded-[3.5px] flex items-center justify-center overflow-clip`}
+          className={`absolute inset-0 ${bgColor} rounded-[3.5px] flex flex-col items-center justify-center overflow-hidden p-4`}
           data-name="Card - Front (Dark)" 
           data-node-id="48:15"
         >
@@ -155,7 +206,7 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
           
           {/* Centered Cursor Logo - Scaled for square card */}
           <div 
-            className="relative z-10 w-[41.349px] h-[46.688px] flex items-center justify-center"
+            className={`relative z-10 w-[41.349px] h-[46.688px] flex items-center justify-center mb-2 transition-opacity ${text ? 'opacity-30' : 'opacity-100'}`}
             data-node-id="48:17"
           >
             <Image
@@ -168,6 +219,25 @@ export default function CursorCard({ variant = 'dark', initialPosition = { x: 0,
               priority
             />
           </div>
+
+          {/* Editable Text Area */}
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={handleTextChange}
+            onBlur={handleTextBlur}
+            onClick={handleTextAreaClick}
+            onTouchStart={(e) => {
+              e.stopPropagation()
+            }}
+            placeholder="Click to add text..."
+            className={`relative z-20 w-full h-[60%] bg-transparent border-none outline-none resize-none ${textColor} ${placeholderColor} placeholder:opacity-50 text-sm leading-relaxed text-center transition-all ${isEditing ? 'select-text' : 'select-none pointer-events-none'}`}
+            style={{
+              userSelect: isEditing ? 'text' : 'none',
+              pointerEvents: isEditing ? 'auto' : 'none',
+            }}
+            readOnly={!isEditing}
+          />
         </div>
       </div>
     </div>

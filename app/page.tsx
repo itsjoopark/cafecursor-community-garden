@@ -8,6 +8,7 @@ interface Card {
   id: string
   variant: 'dark' | 'light'
   position: { x: number; y: number }
+  text: string
 }
 
 export default function Home() {
@@ -29,7 +30,8 @@ export default function Home() {
       position: { 
         x: -canvasOffset.x + (Math.random() * 200 - 100), // Add in viewport center with slight offset
         y: -canvasOffset.y + (Math.random() * 200 - 100)
-      }
+      },
+      text: ''
     }
     setCards([...cards, newCard])
   }
@@ -37,6 +39,12 @@ export default function Home() {
   const handleCardPositionChange = (cardId: string, newPosition: { x: number; y: number }) => {
     setCards(cards.map(card => 
       card.id === cardId ? { ...card, position: newPosition } : card
+    ))
+  }
+
+  const handleCardTextChange = (cardId: string, newText: string) => {
+    setCards(cards.map(card =>
+      card.id === cardId ? { ...card, text: newText } : card
     ))
   }
 
@@ -238,6 +246,8 @@ export default function Home() {
                 variant={card.variant}
                 initialPosition={card.position}
                 onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
+                initialText={card.text}
+                onTextChange={(newText) => handleCardTextChange(card.id, newText)}
               />
             </div>
           ))}
