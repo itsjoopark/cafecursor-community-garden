@@ -1,55 +1,49 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
+
+const cameraButtonSvg = "/assets/1109c83b75241c0d19af3a82d3a34a86aba2016e.svg"
 
 interface StickyNoteToolbarProps {
   onColorSelect?: (color: 'dark' | 'light') => void
 }
 
 export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarProps) {
-  const [lastClicked, setLastClicked] = useState<'dark' | 'light' | null>(null)
+  const [isClicked, setIsClicked] = useState(false)
 
-  const handleColorClick = (color: 'dark' | 'light') => {
-    setLastClicked(color)
-    onColorSelect?.(color)
+  const handleCameraClick = () => {
+    setIsClicked(true)
+    // Default to creating a white/light card (can be customized later)
+    onColorSelect?.('light')
     
     // Visual feedback - reset after animation
-    setTimeout(() => setLastClicked(null), 200)
+    setTimeout(() => setIsClicked(false), 200)
   }
 
   return (
     <div 
-      className="border border-gray-300 border-solid box-border flex flex-col gap-[10px] p-[10px] rounded-[8px] bg-white/60 backdrop-blur-sm shadow-lg" 
-      data-name="Frame_Add_Stickie_Note" 
-      data-node-id="49:83"
+      className="flex items-center justify-center" 
+      data-name="Frame_Photo_Capture_Button" 
+      data-node-id="70:93"
     >
-      <div 
-        className="flex gap-[10px] items-center" 
-        data-name="Frame_Clickable_Modes" 
-        data-node-id="49:80"
+      <button
+        onClick={handleCameraClick}
+        className={`relative w-[88px] h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
+          isClicked ? 'scale-95' : ''
+        }`}
+        aria-label="Add polaroid card"
+        title="Add new polaroid card"
       >
-        {/* Dark/Black Card Option */}
-        <button
-          onClick={() => handleColorClick('dark')}
-          className={`bg-[#14120b] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer shadow-md ${
-            lastClicked === 'dark' ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white scale-95' : ''
-          }`}
-          data-node-id="49:81"
-          aria-label="Add dark card"
-          title="Add dark sticky note"
+        <Image
+          src={cameraButtonSvg}
+          alt="Camera button"
+          width={88}
+          height={88}
+          className="w-full h-full"
+          priority
         />
-        
-        {/* Light/White Card Option */}
-        <button
-          onClick={() => handleColorClick('light')}
-          className={`bg-[#f0efea] rounded-[6px] size-[39px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer shadow-md ${
-            lastClicked === 'light' ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-white scale-95' : ''
-          }`}
-          data-node-id="49:82"
-          aria-label="Add light card"
-          title="Add light sticky note"
-        />
-      </div>
+      </button>
     </div>
   )
 }
