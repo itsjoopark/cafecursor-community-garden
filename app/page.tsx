@@ -20,6 +20,8 @@ export default function Home() {
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
+  const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
+  const [isPinching, setIsPinching] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const MIN_ZOOM = 0.1
@@ -86,12 +88,22 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
-      const touch = e.touches[0]
-      setIsPanning(true)
-      setPanStart({
-        x: touch.clientX - canvasOffset.x,
-        y: touch.clientY - canvasOffset.y,
-      })
+      if (e.touches.length === 2) {
+        // Two finger pinch - initialize pinch-to-zoom
+        setIsPinching(true)
+        setIsPanning(false)
+        const distance = getTouchDistance(e.touches[0], e.touches[1])
+        setLastTouchDistance(distance)
+      } else if (e.touches.length === 1) {
+        // Single finger - initialize panning
+        const touch = e.touches[0]
+        setIsPanning(true)
+        setIsPinching(false)
+        setPanStart({
+          x: touch.clientX - canvasOffset.x,
+          y: touch.clientY - canvasOffset.y,
+        })
+      }
     }
   }
 
@@ -104,8 +116,60 @@ export default function Home() {
     }
   }
 
+  const getTouchDistance = (touch1: Touch, touch2: Touch) => {
+    const dx = touch2.clientX - touch1.clientX
+    const dy = touch2.clientY - touch1.clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
+  const getTouchCenter = (touch1: Touch, touch2: Touch) => {
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2,
+    }
+  }
+
   const handleTouchMove = (e: TouchEvent) => {
-    if (isPanning) {
+    if (e.touches.length === 2) {
+      // Pinch to zoom
+      e.preventDefault()
+      setIsPinching(true)
+      setIsPanning(false)
+      
+      const distance = getTouchDistance(e.touches[0], e.touches[1])
+      
+      if (lastTouchDistance !== null) {
+        // Calculate zoom change
+        const scale = distance / lastTouchDistance
+        const newZoom = Math.min(Math.max(zoom * scale, MIN_ZOOM), MAX_ZOOM)
+        
+        if (newZoom !== zoom) {
+          // Get pinch center relative to viewport
+          const center = getTouchCenter(e.touches[0], e.touches[1])
+          const rect = canvasRef.current?.getBoundingClientRect()
+          
+          if (rect) {
+            const centerX = center.x - rect.left
+            const centerY = center.y - rect.top
+            
+            // Calculate the point in world space before zoom
+            const worldX = (centerX - canvasOffset.x) / zoom
+            const worldY = (centerY - canvasOffset.y) / zoom
+            
+            // Calculate new offset to keep the same world point under the pinch center
+            const newOffsetX = centerX - worldX * newZoom
+            const newOffsetY = centerY - worldY * newZoom
+            
+            setCanvasOffset({ x: newOffsetX, y: newOffsetY })
+          }
+          
+          setZoom(newZoom)
+        }
+      }
+      
+      setLastTouchDistance(distance)
+    } else if (e.touches.length === 1 && isPanning && !isPinching) {
+      // Single touch panning
       const touch = e.touches[0]
       setCanvasOffset({
         x: touch.clientX - panStart.x,
@@ -121,6 +185,8 @@ export default function Home() {
 
   const handleTouchEnd = () => {
     setIsPanning(false)
+    setIsPinching(false)
+    setLastTouchDistance(null)
   }
 
   const handleWheel = (e: WheelEvent) => {
@@ -166,7 +232,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (isPanning) {
+    if (isPanning || isPinching) {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
       window.addEventListener('touchmove', handleTouchMove, { passive: false })
@@ -179,7 +245,7 @@ export default function Home() {
         window.removeEventListener('touchend', handleTouchEnd)
       }
     }
-  }, [isPanning, panStart, canvasOffset])
+  }, [isPanning, isPinching, panStart, canvasOffset, zoom, lastTouchDistance])
 
   useEffect(() => {
     // Add wheel event listener for zooming
@@ -212,6 +278,7 @@ export default function Home() {
       <div 
         ref={canvasRef}
         className="absolute inset-0 z-0"
+        style={{ touchAction: 'none' }}
         onMouseDown={handleCanvasMouseDown}
         onTouchStart={handleCanvasTouchStart}
       >
