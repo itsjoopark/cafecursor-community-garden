@@ -33,7 +33,7 @@ export default function Home() {
     const viewportCenterX = window.innerWidth / 2
     const viewportCenterY = window.innerHeight / 2
     
-    // Convert viewport coordinates to world space
+    // Convert viewport coordinates to world space (accounting for pan and zoom)
     const worldX = (viewportCenterX - canvasOffset.x) / zoom
     const worldY = (viewportCenterY - canvasOffset.y) / zoom
     
