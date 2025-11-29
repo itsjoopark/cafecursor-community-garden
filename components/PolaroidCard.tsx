@@ -11,6 +11,7 @@ interface PolaroidCardProps {
   initialTitle?: string
   initialDescription?: string
   initialImageUrl?: string
+  initialDateStamp?: string
   onTitleChange?: (title: string) => void
   onDescriptionChange?: (description: string) => void
   onImageChange?: (imageUrl: string) => void
@@ -25,6 +26,7 @@ export default function PolaroidCard({
   initialTitle = 'Add Name',
   initialDescription = 'type a message',
   initialImageUrl = defaultImageFrame,
+  initialDateStamp = '',
   onTitleChange,
   onDescriptionChange,
   onImageChange,
@@ -40,7 +42,7 @@ export default function PolaroidCard({
   const [title, setTitle] = useState(initialTitle)
   const [description, setDescription] = useState(initialDescription)
   const [imageUrl, setImageUrl] = useState(initialImageUrl)
-  const [dateStamp, setDateStamp] = useState('')
+  const [dateStamp, setDateStamp] = useState(initialDateStamp)
   const cardRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLInputElement>(null)

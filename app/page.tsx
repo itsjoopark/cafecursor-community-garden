@@ -11,6 +11,7 @@ interface Card {
   title: string
   description: string
   imageUrl: string
+  dateStamp?: string
 }
 
 export default function Home() {
@@ -24,31 +25,65 @@ export default function Home() {
   const [isPinching, setIsPinching] = useState(false)
   const [isSpacebarHeld, setIsSpacebarHeld] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
 
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
 
   const handleAddCard = (variant: 'dark' | 'light') => {
-    // Calculate viewport center and convert to world coordinates
-    const viewportCenterX = window.innerWidth / 2
-    const viewportCenterY = window.innerHeight / 2
+    // Store the variant for when the image is selected
+    pendingCardVariant.current = variant
     
-    // Convert viewport coordinates to world space (accounting for pan and zoom)
-    const worldX = (viewportCenterX - canvasOffset.x) / zoom
-    const worldY = (viewportCenterY - canvasOffset.y) / zoom
-    
-    const newCard: Card = {
-      id: `card-${Date.now()}-${Math.random()}`,
-      variant,
-      position: { 
-        x: worldX,
-        y: worldY
-      },
-      title: 'Add Name',
-      description: 'type a message',
-      imageUrl: '/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg'
+    // Trigger file input to prompt for photo
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file && pendingCardVariant.current) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const imageUrl = reader.result as string
+        
+        // Generate date stamp
+        const now = new Date()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const year = now.getFullYear()
+        const dateStamp = `${month}/${day}/${year}`
+        
+        // Calculate viewport center and convert to world coordinates
+        const viewportCenterX = window.innerWidth / 2
+        const viewportCenterY = window.innerHeight / 2
+        
+        // Convert viewport coordinates to world space (accounting for pan and zoom)
+        const worldX = (viewportCenterX - canvasOffset.x) / zoom
+        const worldY = (viewportCenterY - canvasOffset.y) / zoom
+        
+        // Create card with the uploaded image and date stamp
+        const newCard: Card = {
+          id: `card-${Date.now()}-${Math.random()}`,
+          variant: pendingCardVariant.current!,
+          position: { 
+            x: worldX,
+            y: worldY
+          },
+          title: 'Add Name',
+          description: 'type a message',
+          imageUrl: imageUrl,
+          dateStamp: dateStamp
+        }
+        setCards([...cards, newCard])
+        
+        // Reset pending variant
+        pendingCardVariant.current = null
+      }
+      reader.readAsDataURL(file)
     }
-    setCards([...cards, newCard])
+    
+    // Reset file input so the same file can be selected again
+    e.target.value = ''
   }
 
   const handleCardPositionChange = (cardId: string, newPosition: { x: number; y: number }) => {
@@ -388,6 +423,7 @@ export default function Home() {
                 initialTitle={card.title}
                 initialDescription={card.description}
                 initialImageUrl={card.imageUrl}
+                initialDateStamp={card.dateStamp}
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
@@ -451,6 +487,16 @@ export default function Home() {
       <div className="fixed bottom-[50px] left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
         <StickyNoteToolbar onColorSelect={handleAddCard} />
       </div>
+
+      {/* Hidden File Input for Photo Upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
     </main>
   )
 }
