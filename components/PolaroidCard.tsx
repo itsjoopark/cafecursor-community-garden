@@ -402,7 +402,7 @@ export default function PolaroidCard({
                 onBlur={handleTitleBlur}
                 maxLength={30}
                 className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
-                style={{ fontSize: '11px' }}
+                style={{ fontSize: '16px' }}
               />
             ) : (
               <p 
@@ -424,7 +424,7 @@ export default function PolaroidCard({
                 onBlur={handleDescriptionBlur}
                 maxLength={45}
                 className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
-                style={{ fontSize: '8.25px' }}
+                style={{ fontSize: '16px' }}
               />
             ) : (
               <p 
