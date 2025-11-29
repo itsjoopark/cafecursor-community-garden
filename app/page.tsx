@@ -17,8 +17,6 @@ interface Card {
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
-  const [touchedCardId, setTouchedCardId] = useState<string | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
@@ -120,9 +118,6 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
-      // Clear touched card state when clicking background
-      setTouchedCardId(null)
-      
       setIsPanning(true)
       setPanStart({
         x: e.clientX - canvasOffset.x,
@@ -138,9 +133,6 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
-      // Clear touched card state when touching background
-      setTouchedCardId(null)
-      
       if (e.touches.length === 2) {
         // Two finger pinch - initialize pinch-to-zoom
         setIsPinching(true)
@@ -414,93 +406,35 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
-          {/* Render all Polaroid cards with share buttons at their world positions */}
-          {cards.map((card) => {
-            const isHovered = hoveredCardId === card.id
-            const isTouched = touchedCardId === card.id
-            const showShareButton = isHovered || isTouched
-            
-            return (
-              <div 
-                key={card.id}
-                data-card-container
-                className="absolute flex flex-col gap-[10px] items-center"
-                style={{
-                  left: `${card.position.x}px`,
-                  top: `${card.position.y}px`,
-                  transform: 'translate(-50%, -50%)',
-                  pointerEvents: 'auto',
-                }}
-                onMouseEnter={() => setHoveredCardId(card.id)}
-                onMouseLeave={() => setHoveredCardId(null)}
-                onClick={() => {
-                  // Toggle touch state for mobile
-                  setTouchedCardId(prev => prev === card.id ? null : card.id)
-                }}
-              >
-                {/* Share Button - shows on hover (desktop) or click (mobile) */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    // TODO: Implement share functionality
-                    console.log('Share card:', card.id)
-                  }}
-                  className="border border-[#edecec] border-solid box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-gray-50 cursor-pointer"
-                  style={{ 
-                    width: '81.614px',
-                    opacity: showShareButton ? 1 : 0,
-                    transform: showShareButton ? 'translateY(0)' : 'translateY(10px)',
-                    transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
-                    pointerEvents: showShareButton ? 'auto' : 'none',
-                  }}
-                  data-node-id="75:209"
-                >
-                  {/* Share Icon */}
-                  <div 
-                    className="flex items-center justify-center shrink-0"
-                    style={{ 
-                      width: '15.614px', 
-                      height: '15.614px',
-                      transform: 'rotate(54deg)'
-                    }}
-                  >
-                    <img
-                      src="/assets/30c3e7d000803df7c4e88a7b566e6b9982d50906.svg"
-                      alt="Share"
-                      style={{ width: '11.179px', height: '11.178px' }}
-                    />
-                  </div>
-                  
-                  {/* Share Text */}
-                  <span 
-                    className="font-['Cursor_Gothic:Regular',sans-serif] text-[#14120b] text-[15px] leading-normal"
-                    style={{ width: '41px', height: '22px' }}
-                    data-node-id="75:204"
-                  >
-                    Share
-                  </span>
-                </button>
-
-                {/* Polaroid Card */}
-                <div className="w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]">
-                <PolaroidCard 
-                  initialPosition={card.position}
-                  onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
-                  initialTitle={card.title}
-                  initialDescription={card.description}
-                  initialImageUrl={card.imageUrl}
-                  initialDateStamp={card.dateStamp}
-                  onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
-                  onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
-                  onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
-                  isSelected={draggingCardId === card.id}
-                  onDragStart={() => setDraggingCardId(card.id)}
-                  onDragEnd={() => setDraggingCardId(null)}
-                />
-              </div>
+          {/* Render all Polaroid cards at their world positions */}
+          {cards.map((card) => (
+            <div 
+              key={card.id}
+              data-card-container
+              className="absolute w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]"
+              style={{
+                left: `${card.position.x}px`,
+                top: `${card.position.y}px`,
+                transform: 'translate(-50%, -50%)',
+                pointerEvents: 'auto',
+              }}
+            >
+              <PolaroidCard 
+                initialPosition={card.position}
+                onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
+                initialTitle={card.title}
+                initialDescription={card.description}
+                initialImageUrl={card.imageUrl}
+                initialDateStamp={card.dateStamp}
+                onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
+                onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
+                onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
+                isSelected={draggingCardId === card.id}
+                onDragStart={() => setDraggingCardId(card.id)}
+                onDragEnd={() => setDraggingCardId(null)}
+              />
             </div>
-          )
-          })}
+          ))}
 
           {/* Instructions when no cards - centered in viewport */}
           {cards.length === 0 && (
