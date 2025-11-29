@@ -407,57 +407,66 @@ export default function Home() {
           }}
         >
           {/* Render all Polaroid cards with share buttons at their world positions */}
-          {cards.map((card) => (
-            <div 
-              key={card.id}
-              data-card-container
-              className="absolute flex flex-col gap-[10px] items-center"
-              style={{
-                left: `${card.position.x}px`,
-                top: `${card.position.y}px`,
-                transform: 'translate(-50%, -50%)',
-                pointerEvents: 'auto',
-              }}
-            >
-              {/* Share Button - positioned above card */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  // TODO: Implement share functionality
-                  console.log('Share card:', card.id)
+          {cards.map((card) => {
+            const isCardSelected = draggingCardId === card.id
+            
+            return (
+              <div 
+                key={card.id}
+                data-card-container
+                className="absolute flex flex-col gap-[10px] items-center"
+                style={{
+                  left: `${card.position.x}px`,
+                  top: `${card.position.y}px`,
+                  transform: 'translate(-50%, -50%)',
+                  pointerEvents: 'auto',
                 }}
-                className="border border-[#edecec] border-solid box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-gray-50 transition-colors cursor-pointer"
-                style={{ width: '81.614px' }}
-                data-node-id="75:209"
               >
-                {/* Share Icon */}
-                <div 
-                  className="flex items-center justify-center shrink-0"
-                  style={{ 
-                    width: '15.614px', 
-                    height: '15.614px',
-                    transform: 'rotate(54deg)'
+                {/* Share Button - animated on card select/drag */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // TODO: Implement share functionality
+                    console.log('Share card:', card.id)
                   }}
+                  className="border border-[#edecec] border-solid box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-gray-50 cursor-pointer"
+                  style={{ 
+                    width: '81.614px',
+                    opacity: isCardSelected ? 1 : 0,
+                    transform: isCardSelected ? 'translateY(0)' : 'translateY(10px)',
+                    transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
+                    pointerEvents: isCardSelected ? 'auto' : 'none',
+                  }}
+                  data-node-id="75:209"
                 >
-                  <img
-                    src="/assets/30c3e7d000803df7c4e88a7b566e6b9982d50906.svg"
-                    alt="Share"
-                    style={{ width: '11.179px', height: '11.178px' }}
-                  />
-                </div>
-                
-                {/* Share Text */}
-                <span 
-                  className="font-['Cursor_Gothic:Regular',sans-serif] text-[#14120b] text-[15px] leading-normal"
-                  style={{ width: '41px', height: '22px' }}
-                  data-node-id="75:204"
-                >
-                  Share
-                </span>
-              </button>
+                  {/* Share Icon */}
+                  <div 
+                    className="flex items-center justify-center shrink-0"
+                    style={{ 
+                      width: '15.614px', 
+                      height: '15.614px',
+                      transform: 'rotate(54deg)'
+                    }}
+                  >
+                    <img
+                      src="/assets/30c3e7d000803df7c4e88a7b566e6b9982d50906.svg"
+                      alt="Share"
+                      style={{ width: '11.179px', height: '11.178px' }}
+                    />
+                  </div>
+                  
+                  {/* Share Text */}
+                  <span 
+                    className="font-['Cursor_Gothic:Regular',sans-serif] text-[#14120b] text-[15px] leading-normal"
+                    style={{ width: '41px', height: '22px' }}
+                    data-node-id="75:204"
+                  >
+                    Share
+                  </span>
+                </button>
 
-              {/* Polaroid Card */}
-              <div className="w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]">
+                {/* Polaroid Card */}
+                <div className="w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]">
                 <PolaroidCard 
                   initialPosition={card.position}
                   onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
