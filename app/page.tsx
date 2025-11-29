@@ -22,6 +22,7 @@ export default function Home() {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 })
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const [isPinching, setIsPinching] = useState(false)
+  const [isSpacebarHeld, setIsSpacebarHeld] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const MIN_ZOOM = 0.1
@@ -231,6 +232,36 @@ export default function Home() {
     setZoom(1)
   }
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // Check if user is typing in an input field
+    const target = e.target as HTMLElement
+    const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+    
+    if (e.code === 'Space' && !isInputField && !isSpacebarHeld) {
+      e.preventDefault()
+      setIsSpacebarHeld(true)
+    }
+  }
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (e.code === 'Space') {
+      e.preventDefault()
+      setIsSpacebarHeld(false)
+      setIsPanning(false)
+    }
+  }
+
+  const handleSpacebarMouseDown = (e: React.MouseEvent) => {
+    if (isSpacebarHeld) {
+      e.preventDefault()
+      setIsPanning(true)
+      setPanStart({
+        x: e.clientX - canvasOffset.x,
+        y: e.clientY - canvasOffset.y,
+      })
+    }
+  }
+
   useEffect(() => {
     if (isPanning || isPinching) {
       window.addEventListener('mousemove', handleMouseMove)
@@ -259,6 +290,17 @@ export default function Home() {
     }
   }, [zoom, canvasOffset])
 
+  useEffect(() => {
+    // Add keyboard event listeners for spacebar panning
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [isSpacebarHeld])
+
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
       {/* Fixed Header - Anchored to top with 50px gap */}
@@ -278,8 +320,17 @@ export default function Home() {
       <div 
         ref={canvasRef}
         className="absolute inset-0 z-0"
-        style={{ touchAction: 'none' }}
-        onMouseDown={handleCanvasMouseDown}
+        style={{ 
+          touchAction: 'none',
+          cursor: isSpacebarHeld ? (isPanning ? 'grabbing' : 'grab') : 'default'
+        }}
+        onMouseDown={(e) => {
+          if (isSpacebarHeld) {
+            handleSpacebarMouseDown(e)
+          } else {
+            handleCanvasMouseDown(e)
+          }
+        }}
         onTouchStart={handleCanvasTouchStart}
       >
         {/* Solid Background Color */}
@@ -300,7 +351,7 @@ export default function Home() {
             backgroundImage: `radial-gradient(circle, rgba(20, 18, 11, 0.35) 2px, transparent 2px)`,
             backgroundSize: `${100 * zoom}px ${100 * zoom}px`,
             backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
-            cursor: isPanning ? 'grabbing' : 'grab',
+            cursor: (isPanning || isSpacebarHeld) ? (isPanning ? 'grabbing' : 'grab') : 'default',
           }}
         />
         
