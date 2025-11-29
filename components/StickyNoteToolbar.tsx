@@ -13,10 +13,7 @@ interface StickyNoteToolbarProps {
 export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: StickyNoteToolbarProps) {
   const [isClicked, setIsClicked] = useState(false)
 
-  const handleCameraClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
+  const handleCameraClick = () => {
     setIsClicked(true)
     
     // Call both handlers - the camera click handler should trigger file input directly
@@ -29,18 +26,23 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: Stic
 
   return (
     <div 
-      className="flex items-center justify-center touch-none select-none" 
+      className="flex items-center justify-center select-none" 
       data-name="Frame_Photo_Capture_Button" 
       data-node-id="70:93"
     >
       <button
+        type="button"
         onClick={handleCameraClick}
-        className={`relative w-[70px] h-[70px] sm:w-[88px] sm:h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer touch-auto ${
+        onTouchEnd={(e) => {
+          e.preventDefault()
+          handleCameraClick()
+        }}
+        className={`relative w-[70px] h-[70px] sm:w-[88px] sm:h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
           isClicked ? 'scale-95' : ''
         }`}
-        aria-label="Add polaroid card"
-        title="Add new polaroid card"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+        aria-label="Take or upload photo"
+        title="Take or upload photo"
+        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
       >
         <Image
           src={cameraButtonSvg}

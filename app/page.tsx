@@ -498,9 +498,15 @@ export default function Home() {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        {...({ capture: 'environment' } as any)}
+        capture="environment"
         onChange={handleFileSelect}
-        className="hidden"
+        style={{ 
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          width: 1,
+          height: 1
+        }}
         aria-label="Capture or upload photo"
       />
     </main>
