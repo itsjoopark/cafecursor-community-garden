@@ -474,7 +474,7 @@ export default function Home() {
             >
               <div className="text-center px-4">
                 <p className="text-[#14120b] text-xl sm:text-2xl font-medium opacity-70 mb-2">
-                  Click a color in the toolbar below to add a polaroid card
+                  Click the plus icon below to add a polaroid card
                 </p>
                 <p className="text-[#14120b] text-base sm:text-lg opacity-50">
                   Drag the background to pan around the infinite canvas
