@@ -376,10 +376,8 @@ export default function Home() {
               data-card-container
               className="absolute w-[232px] md:w-[281px] h-[275px] md:h-[333.221px]"
               style={{
-                left: '50%',
-                top: '50%',
-                marginLeft: `${card.position.x}px`,
-                marginTop: `${card.position.y}px`,
+                left: `${card.position.x}px`,
+                top: `${card.position.y}px`,
                 transform: 'translate(-50%, -50%)',
                 pointerEvents: 'auto',
               }}
