@@ -483,7 +483,8 @@ export default function Home() {
                 />
               </div>
             </div>
-          ))}
+          )
+          })}
 
           {/* Instructions when no cards - centered in viewport */}
           {cards.length === 0 && (
