@@ -358,9 +358,9 @@ export default function Home() {
           />
         </div>
 
-        {/* Cafe Name Container */}
+        {/* Cafe Name - No Background */}
         <div 
-          className="box-border flex gap-[10px] items-center justify-center px-[10px] py-[5px] rounded-[9px] bg-white/60 backdrop-blur-sm shadow-lg"
+          className="box-border flex gap-[10px] items-center justify-center px-[10px] py-[5px]"
           data-node-id="72:154"
         >
           <h1 
