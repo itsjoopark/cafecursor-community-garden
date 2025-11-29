@@ -113,42 +113,34 @@ export default function Home() {
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Check if clicking on the background layer or grid (not on cards)
-    const target = e.target as HTMLElement
-    const isCardOrChild = target.closest('[data-card-container]')
-    
-    if (!isCardOrChild) {
-      setIsPanning(true)
-      setPanStart({
-        x: e.clientX - canvasOffset.x,
-        y: e.clientY - canvasOffset.y,
-      })
-      e.preventDefault()
-    }
+    // Only handle clicks that are directly on the canvas/background
+    // Clicks on cards will be stopped at the card level
+    setIsPanning(true)
+    setPanStart({
+      x: e.clientX - canvasOffset.x,
+      y: e.clientY - canvasOffset.y,
+    })
+    e.preventDefault()
   }
 
   const handleCanvasTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    // Check if touching on the background layer or grid (not on cards)
-    const target = e.target as HTMLElement
-    const isCardOrChild = target.closest('[data-card-container]')
-    
-    if (!isCardOrChild) {
-      if (e.touches.length === 2) {
-        // Two finger pinch - initialize pinch-to-zoom
-        setIsPinching(true)
-        setIsPanning(false)
-        const distance = getTouchDistance(e.touches[0], e.touches[1])
-        setLastTouchDistance(distance)
-      } else if (e.touches.length === 1) {
-        // Single finger - initialize panning
-        const touch = e.touches[0]
-        setIsPanning(true)
-        setIsPinching(false)
-        setPanStart({
-          x: touch.clientX - canvasOffset.x,
-          y: touch.clientY - canvasOffset.y,
-        })
-      }
+    // Only handle touch events that are directly on the canvas/background
+    // Touch events on cards will be stopped at the card level
+    if (e.touches.length === 2) {
+      // Two finger pinch - initialize pinch-to-zoom
+      setIsPinching(true)
+      setIsPanning(false)
+      const distance = getTouchDistance(e.touches[0], e.touches[1])
+      setLastTouchDistance(distance)
+    } else if (e.touches.length === 1) {
+      // Single finger - initialize panning
+      const touch = e.touches[0]
+      setIsPanning(true)
+      setIsPinching(false)
+      setPanStart({
+        x: touch.clientX - canvasOffset.x,
+        y: touch.clientY - canvasOffset.y,
+      })
     }
   }
 
@@ -417,6 +409,14 @@ export default function Home() {
                 top: `${card.position.y}px`,
                 transform: 'translate(-50%, -50%)',
                 pointerEvents: 'auto',
+              }}
+              onMouseDown={(e) => {
+                // Stop propagation to prevent canvas panning when clicking cards (desktop)
+                e.stopPropagation()
+              }}
+              onTouchStart={(e) => {
+                // Stop propagation to prevent canvas panning when touching cards (mobile)
+                e.stopPropagation()
               }}
             >
               <PolaroidCard 
