@@ -278,30 +278,59 @@ export default function Home() {
       return
     }
 
-    const cardElement = cardRefs.current.get(selectedCardId)
-    if (!cardElement) {
+    const cardContainer = cardRefs.current.get(selectedCardId)
+    if (!cardContainer) {
       console.error('Card element not found')
       return
     }
 
     try {
-      // Capture the card element as a canvas
-      const canvas = await html2canvas(cardElement, {
-        backgroundColor: null,
-        scale: 2, // Higher quality
-        useCORS: true, // Allow cross-origin images
+      // Find the actual Polaroid card content (not the positioning container)
+      const cardContent = cardContainer.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
+      if (!cardContent) {
+        console.error('Card content not found')
+        return
+      }
+
+      // Wait for any images to load
+      const images = cardContent.querySelectorAll('img')
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve()
+          return new Promise((resolve, reject) => {
+            img.onload = resolve
+            img.onerror = reject
+            // Set a timeout in case image fails to load
+            setTimeout(resolve, 2000)
+          })
+        })
+      )
+
+      // Capture the card content as a canvas
+      const canvas = await html2canvas(cardContent, {
+        backgroundColor: '#ffffff',
+        scale: 3, // Very high quality for sharp export
+        useCORS: true,
+        allowTaint: true,
         logging: false,
+        width: cardContent.offsetWidth,
+        height: cardContent.offsetHeight,
+        windowWidth: cardContent.offsetWidth,
+        windowHeight: cardContent.offsetHeight,
       })
 
-      // Convert canvas to blob
+      // Convert canvas to blob and download
       canvas.toBlob((blob) => {
-        if (!blob) return
+        if (!blob) {
+          alert('Failed to create image. Please try again.')
+          return
+        }
 
         // Create download link
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `polaroid-${Date.now()}.png`
+        link.download = `cafe-cursor-polaroid-${Date.now()}.png`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
@@ -515,7 +544,7 @@ export default function Home() {
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
-                isSelected={draggingCardId === card.id}
+                isSelected={draggingCardId === card.id || selectedCardId === card.id}
                 onDragStart={() => setDraggingCardId(card.id)}
                 onDragEnd={() => setDraggingCardId(null)}
               />
