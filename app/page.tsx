@@ -29,13 +29,20 @@ export default function Home() {
   const MAX_ZOOM = 3
 
   const handleAddCard = (variant: 'dark' | 'light') => {
-    // Add cards at center of current viewport
+    // Calculate viewport center and convert to world coordinates
+    const viewportCenterX = window.innerWidth / 2
+    const viewportCenterY = window.innerHeight / 2
+    
+    // Convert viewport coordinates to world space
+    const worldX = (viewportCenterX - canvasOffset.x) / zoom
+    const worldY = (viewportCenterY - canvasOffset.y) / zoom
+    
     const newCard: Card = {
       id: `card-${Date.now()}-${Math.random()}`,
       variant,
       position: { 
-        x: -canvasOffset.x + (Math.random() * 200 - 100), // Add in viewport center with slight offset
-        y: -canvasOffset.y + (Math.random() * 200 - 100)
+        x: worldX,
+        y: worldY
       },
       title: 'Add Name',
       description: 'type a message',
