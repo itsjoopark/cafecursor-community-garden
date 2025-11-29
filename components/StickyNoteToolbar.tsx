@@ -7,14 +7,20 @@ const cameraButtonSvg = "/assets/1109c83b75241c0d19af3a82d3a34a86aba2016e.svg"
 
 interface StickyNoteToolbarProps {
   onColorSelect?: (color: 'dark' | 'light') => void
+  onCameraClick?: () => void
 }
 
-export default function StickyNoteToolbar({ onColorSelect }: StickyNoteToolbarProps) {
+export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: StickyNoteToolbarProps) {
   const [isClicked, setIsClicked] = useState(false)
 
-  const handleCameraClick = () => {
+  const handleCameraClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
     setIsClicked(true)
-    // Default to creating a white/light card (can be customized later)
+    
+    // Call both handlers - the camera click handler should trigger file input directly
+    onCameraClick?.()
     onColorSelect?.('light')
     
     // Visual feedback - reset after animation

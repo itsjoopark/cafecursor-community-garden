@@ -31,12 +31,14 @@ export default function Home() {
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
 
+  const handleCameraButtonClick = () => {
+    // Trigger file input immediately on button click for mobile compatibility
+    fileInputRef.current?.click()
+  }
+
   const handleAddCard = (variant: 'dark' | 'light') => {
     // Store the variant for when the image is selected
     pendingCardVariant.current = variant
-    
-    // Trigger file input to prompt for photo
-    fileInputRef.current?.click()
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -485,17 +487,21 @@ export default function Home() {
 
       {/* Fixed Camera Button Toolbar - Bottom with 50px gap */}
       <div className="fixed bottom-[50px] left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
-        <StickyNoteToolbar onColorSelect={handleAddCard} />
+        <StickyNoteToolbar 
+          onColorSelect={handleAddCard}
+          onCameraClick={handleCameraButtonClick}
+        />
       </div>
 
-      {/* Hidden File Input for Photo Upload */}
+      {/* Hidden File Input for Photo Upload - Mobile Camera */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
+        {...({ capture: 'environment' } as any)}
         onChange={handleFileSelect}
         className="hidden"
+        aria-label="Capture or upload photo"
       />
     </main>
   )
