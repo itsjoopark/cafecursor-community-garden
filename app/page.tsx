@@ -17,6 +17,8 @@ interface Card {
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null)
+  const [touchedCardId, setTouchedCardId] = useState<string | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
@@ -118,6 +120,9 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
+      // Clear touched card state when clicking background
+      setTouchedCardId(null)
+      
       setIsPanning(true)
       setPanStart({
         x: e.clientX - canvasOffset.x,
@@ -133,6 +138,9 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
+      // Clear touched card state when touching background
+      setTouchedCardId(null)
+      
       if (e.touches.length === 2) {
         // Two finger pinch - initialize pinch-to-zoom
         setIsPinching(true)
@@ -408,7 +416,9 @@ export default function Home() {
         >
           {/* Render all Polaroid cards with share buttons at their world positions */}
           {cards.map((card) => {
-            const isCardSelected = draggingCardId === card.id
+            const isHovered = hoveredCardId === card.id
+            const isTouched = touchedCardId === card.id
+            const showShareButton = isHovered || isTouched
             
             return (
               <div 
@@ -421,8 +431,14 @@ export default function Home() {
                   transform: 'translate(-50%, -50%)',
                   pointerEvents: 'auto',
                 }}
+                onMouseEnter={() => setHoveredCardId(card.id)}
+                onMouseLeave={() => setHoveredCardId(null)}
+                onClick={() => {
+                  // Toggle touch state for mobile
+                  setTouchedCardId(prev => prev === card.id ? null : card.id)
+                }}
               >
-                {/* Share Button - animated on card select/drag */}
+                {/* Share Button - shows on hover (desktop) or click (mobile) */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
@@ -432,10 +448,10 @@ export default function Home() {
                   className="border border-[#edecec] border-solid box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-gray-50 cursor-pointer"
                   style={{ 
                     width: '81.614px',
-                    opacity: isCardSelected ? 1 : 0,
-                    transform: isCardSelected ? 'translateY(0)' : 'translateY(10px)',
+                    opacity: showShareButton ? 1 : 0,
+                    transform: showShareButton ? 'translateY(0)' : 'translateY(10px)',
                     transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
-                    pointerEvents: isCardSelected ? 'auto' : 'none',
+                    pointerEvents: showShareButton ? 'auto' : 'none',
                   }}
                   data-node-id="75:209"
                 >
