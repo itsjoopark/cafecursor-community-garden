@@ -45,7 +45,7 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDown
 
   return (
     <div 
-      className="border border-[#bfbfbf] border-solid box-border flex gap-[25px] items-center p-[10px] rounded-[10px] bg-white"
+      className="border border-[#bfbfbf] border-solid box-border flex gap-[30px] items-center px-[15px] py-[12px] rounded-[12px] bg-white shadow-md"
       data-node-id="75:337"
     >
       {/* Download Icon */}
@@ -56,13 +56,13 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDown
           clickedIcon === 'download' ? 'scale-95' : ''
         }`}
         style={{ 
-          width: '15.679px', 
-          height: '15.052px',
+          width: '22px', 
+          height: '22px',
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation'
         }}
         aria-label="Download"
-        title="Download"
+        title="Download selected card"
         data-node-id="75:296"
       >
         <img
@@ -84,8 +84,8 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDown
           clickedIcon === 'camera' ? 'scale-95' : ''
         }`}
         style={{ 
-          width: '20px', 
-          height: '20px',
+          width: '26px', 
+          height: '26px',
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation'
         }}
@@ -109,8 +109,8 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDown
           clickedIcon === 'share' ? 'scale-95' : ''
         }`}
         style={{ 
-          width: '20.952px', 
-          height: '20.952px',
+          width: '26px', 
+          height: '26px',
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation'
         }}
@@ -122,7 +122,7 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDown
           <img
             src={shareIconSvg}
             alt="Share"
-            style={{ width: '15px', height: '14.999px' }}
+            style={{ width: '18px', height: '18px' }}
           />
         </div>
       </button>
