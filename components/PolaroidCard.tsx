@@ -14,6 +14,8 @@ interface PolaroidCardProps {
   onTitleChange?: (title: string) => void
   onDescriptionChange?: (description: string) => void
   onImageChange?: (imageUrl: string) => void
+  isSelected?: boolean
+  onSelect?: () => void
 }
 
 export default function PolaroidCard({ 
@@ -24,7 +26,9 @@ export default function PolaroidCard({
   initialImageUrl = defaultImageFrame,
   onTitleChange,
   onDescriptionChange,
-  onImageChange
+  onImageChange,
+  isSelected = false,
+  onSelect
 }: PolaroidCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -42,6 +46,13 @@ export default function PolaroidCard({
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
+
+  const handleCardClick = () => {
+    // Select the card when clicked (if not dragging)
+    if (!isDragging) {
+      onSelect?.()
+    }
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Don't start drag if clicking on input fields or image
@@ -226,14 +237,17 @@ export default function PolaroidCard({
         userSelect: 'none',
         transition: isDragging ? 'none' : 'transform 0.1s ease-out',
       }}
+      onClick={handleCardClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
       {/* Desktop Layout */}
       <div className="hidden md:block relative w-full h-full">
         <div 
-          className="bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] shadow-lg border border-[#d9d9d9]"
-          style={{ borderWidth: '0.829px' }}
+          className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] shadow-lg border transition-all duration-200 ${
+            isSelected ? 'border-blue-400' : 'border-[#d9d9d9]'
+          }`}
+          style={{ borderWidth: isSelected ? '2.5px' : '0.829px' }}
           data-name="Polaroid Card - Backpane (White)"
           data-node-id="70:76"
         >
@@ -321,8 +335,10 @@ export default function PolaroidCard({
       {/* Mobile Layout */}
       <div className="block md:hidden relative w-full h-full">
         <div 
-          className="bg-white overflow-clip rounded-[2.4px] w-full h-full shadow-lg border border-[#d9d9d9]"
-          style={{ borderWidth: '0.68px' }}
+          className={`bg-white overflow-clip rounded-[2.4px] w-full h-full shadow-lg border transition-all duration-200 ${
+            isSelected ? 'border-blue-400' : 'border-[#d9d9d9]'
+          }`}
+          style={{ borderWidth: isSelected ? '2px' : '0.68px' }}
           data-name="Polaroid Card - Backpane (White)"
         >
           {/* Image Frame */}
