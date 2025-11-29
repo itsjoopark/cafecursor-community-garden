@@ -9,9 +9,10 @@ const shareIconSvg = "/assets/8b61fb9c976be6754b86ffc5fb4c0cae3073a233.svg"
 interface StickyNoteToolbarProps {
   onColorSelect?: (color: 'dark' | 'light') => void
   onCameraClick?: () => void
+  onDownloadClick?: () => void
 }
 
-export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: StickyNoteToolbarProps) {
+export default function StickyNoteToolbar({ onColorSelect, onCameraClick, onDownloadClick }: StickyNoteToolbarProps) {
   const [clickedIcon, setClickedIcon] = useState<'download' | 'camera' | 'share' | null>(null)
 
   const handleCameraClick = () => {
@@ -27,8 +28,11 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: Stic
 
   const handleDownloadClick = () => {
     setClickedIcon('download')
-    // TODO: Implement download functionality
-    console.log('Download clicked')
+    
+    // Trigger download functionality
+    onDownloadClick?.()
+    
+    // Visual feedback - reset after animation
     setTimeout(() => setClickedIcon(null), 200)
   }
 
