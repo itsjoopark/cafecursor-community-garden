@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 
-const cameraButtonSvg = "/assets/1109c83b75241c0d19af3a82d3a34a86aba2016e.svg"
+const plusIconSvg = "/assets/74224aa9f9e99b3b3edfcd2ed0af8004567f8b60.svg"
 
 interface StickyNoteToolbarProps {
   onColorSelect?: (color: 'dark' | 'light') => void
@@ -13,10 +13,10 @@ interface StickyNoteToolbarProps {
 export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: StickyNoteToolbarProps) {
   const [isClicked, setIsClicked] = useState(false)
 
-  const handleCameraClick = () => {
+  const handleAddClick = () => {
     setIsClicked(true)
     
-    // Call both handlers - the camera click handler should trigger file input directly
+    // Call both handlers - triggers file input and sets card variant
     onCameraClick?.()
     onColorSelect?.('light')
     
@@ -26,33 +26,43 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: Stic
 
   return (
     <div 
-      className="flex items-center justify-center select-none" 
-      data-name="Frame_Photo_Capture_Button" 
-      data-node-id="70:93"
+      className="border border-[#bfbfbf] border-solid box-border flex flex-col gap-[10px] p-[10px] rounded-[8px] bg-white"
+      data-name="Frame_Add_Polaroid" 
+      data-node-id="72:140"
     >
-      <button
-        type="button"
-        onClick={handleCameraClick}
-        onTouchEnd={(e) => {
-          e.preventDefault()
-          handleCameraClick()
-        }}
-        className={`relative w-[70px] h-[70px] sm:w-[88px] sm:h-[88px] transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
-          isClicked ? 'scale-95' : ''
-        }`}
-        aria-label="Take or upload photo"
-        title="Take or upload photo"
-        style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+      <div 
+        className="flex gap-[20px] items-center"
+        data-name="Frame_Clickable_Modes" 
+        data-node-id="72:141"
       >
-        <Image
-          src={cameraButtonSvg}
-          alt="Camera button"
-          width={88}
-          height={88}
-          className="w-full h-full drop-shadow-lg"
-          priority
-        />
-      </button>
+        <button
+          type="button"
+          onClick={handleAddClick}
+          onTouchEnd={(e) => {
+            e.preventDefault()
+            handleAddClick()
+          }}
+          className={`relative size-[24px] overflow-clip flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer ${
+            isClicked ? 'scale-95' : ''
+          }`}
+          aria-label="Add new polaroid"
+          title="Add new polaroid"
+          style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
+          data-name="plus"
+          data-node-id="75:175"
+        >
+          <div className="relative size-full">
+            <Image
+              src={plusIconSvg}
+              alt="Add"
+              width={24}
+              height={24}
+              className="w-full h-full"
+              priority
+            />
+          </div>
+        </button>
+      </div>
     </div>
   )
 }
