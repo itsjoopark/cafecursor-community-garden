@@ -15,7 +15,8 @@ interface PolaroidCardProps {
   onDescriptionChange?: (description: string) => void
   onImageChange?: (imageUrl: string) => void
   isSelected?: boolean
-  onSelect?: () => void
+  onDragStart?: () => void
+  onDragEnd?: () => void
 }
 
 export default function PolaroidCard({ 
@@ -28,7 +29,8 @@ export default function PolaroidCard({
   onDescriptionChange,
   onImageChange,
   isSelected = false,
-  onSelect
+  onDragStart,
+  onDragEnd
 }: PolaroidCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -46,13 +48,6 @@ export default function PolaroidCard({
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
-
-  const handleCardClick = () => {
-    // Select the card when clicked (if not dragging)
-    if (!isDragging) {
-      onSelect?.()
-    }
-  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     // Don't start drag if clicking on input fields or image
@@ -91,7 +86,10 @@ export default function PolaroidCard({
       const deltaY = e.clientY - dragStart.y
       
       if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-        setIsDragging(true)
+        if (!isDragging) {
+          setIsDragging(true)
+          onDragStart?.() // Notify parent that drag started
+        }
       }
       
       setDragOffset({
@@ -108,7 +106,10 @@ export default function PolaroidCard({
       const deltaY = touch.clientY - dragStart.y
       
       if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
-        setIsDragging(true)
+        if (!isDragging) {
+          setIsDragging(true)
+          onDragStart?.() // Notify parent that drag started
+        }
         e.preventDefault()
       }
       
@@ -120,6 +121,8 @@ export default function PolaroidCard({
   }
 
   const handleMouseUp = () => {
+    const wasDragging = isDragging
+    
     if (isDragging && onPositionChange) {
       onPositionChange({
         x: initialPosition.x + dragOffset.x,
@@ -129,10 +132,19 @@ export default function PolaroidCard({
     
     setDragStart({ x: 0, y: 0 })
     setDragOffset({ x: 0, y: 0 })
-    setTimeout(() => setIsDragging(false), 100)
+    
+    // Clear dragging state and notify parent
+    setTimeout(() => {
+      setIsDragging(false)
+      if (wasDragging) {
+        onDragEnd?.() // Notify parent that drag ended
+      }
+    }, 100)
   }
 
   const handleTouchEnd = () => {
+    const wasDragging = isDragging
+    
     if (isDragging && onPositionChange) {
       onPositionChange({
         x: initialPosition.x + dragOffset.x,
@@ -142,7 +154,14 @@ export default function PolaroidCard({
     
     setDragStart({ x: 0, y: 0 })
     setDragOffset({ x: 0, y: 0 })
-    setTimeout(() => setIsDragging(false), 100)
+    
+    // Clear dragging state and notify parent
+    setTimeout(() => {
+      setIsDragging(false)
+      if (wasDragging) {
+        onDragEnd?.() // Notify parent that drag ended
+      }
+    }, 100)
   }
 
   const handleTitleClick = () => {
@@ -237,17 +256,16 @@ export default function PolaroidCard({
         userSelect: 'none',
         transition: isDragging ? 'none' : 'transform 0.1s ease-out',
       }}
-      onClick={handleCardClick}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
       {/* Desktop Layout */}
       <div className="hidden md:block relative w-full h-full">
         <div 
-          className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] shadow-lg border transition-all duration-200 ${
-            isSelected ? 'border-blue-400' : 'border-[#d9d9d9]'
+          className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
+            isDragging ? 'border-blue-400 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
           }`}
-          style={{ borderWidth: isSelected ? '2.5px' : '0.829px' }}
+          style={{ borderWidth: isDragging ? '2.5px' : '0.829px' }}
           data-name="Polaroid Card - Backpane (White)"
           data-node-id="70:76"
         >
@@ -335,10 +353,10 @@ export default function PolaroidCard({
       {/* Mobile Layout */}
       <div className="block md:hidden relative w-full h-full">
         <div 
-          className={`bg-white overflow-clip rounded-[2.4px] w-full h-full shadow-lg border transition-all duration-200 ${
-            isSelected ? 'border-blue-400' : 'border-[#d9d9d9]'
+          className={`bg-white overflow-clip rounded-[2.4px] w-full h-full border transition-all duration-150 ${
+            isDragging ? 'border-blue-400 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
           }`}
-          style={{ borderWidth: isSelected ? '2px' : '0.68px' }}
+          style={{ borderWidth: isDragging ? '2px' : '0.68px' }}
           data-name="Polaroid Card - Backpane (White)"
         >
           {/* Image Frame */}

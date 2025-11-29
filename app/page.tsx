@@ -15,7 +15,7 @@ interface Card {
 
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
+  const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
@@ -71,9 +71,6 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
-      // Deselect any selected card when clicking on background
-      setSelectedCardId(null)
-      
       setIsPanning(true)
       setPanStart({
         x: e.clientX - canvasOffset.x,
@@ -89,9 +86,6 @@ export default function Home() {
     const isCardOrChild = target.closest('[data-card-container]')
     
     if (!isCardOrChild) {
-      // Deselect any selected card when touching background
-      setSelectedCardId(null)
-      
       const touch = e.touches[0]
       setIsPanning(true)
       setPanStart({
@@ -274,8 +268,9 @@ export default function Home() {
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
-                isSelected={selectedCardId === card.id}
-                onSelect={() => setSelectedCardId(card.id)}
+                isSelected={draggingCardId === card.id}
+                onDragStart={() => setDraggingCardId(card.id)}
+                onDragEnd={() => setDraggingCardId(null)}
               />
             </div>
           ))}
