@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import html2canvas from 'html2canvas'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
 import { uploadImage, saveCard, updateCard, getAllCards, subscribeToCards } from '@/lib/supabase'
@@ -19,7 +18,6 @@ interface Card {
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [isPanning, setIsPanning] = useState(false)
@@ -30,7 +28,6 @@ export default function Home() {
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
-  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
@@ -165,7 +162,6 @@ export default function Home() {
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only handle clicks that are directly on the canvas/background
     // Clicks on cards will be stopped at the card level
-    setSelectedCardId(null) // Deselect card when clicking background
     setIsPanning(true)
     setPanStart({
       x: e.clientX - canvasOffset.x,
@@ -317,76 +313,6 @@ export default function Home() {
 
   const handleResetZoom = () => {
     setZoom(1)
-  }
-
-  const handleDownloadCard = async () => {
-    if (!selectedCardId) {
-      alert('Please select a card first by clicking on it')
-      return
-    }
-
-    const cardContainer = cardRefs.current.get(selectedCardId)
-    if (!cardContainer) {
-      console.error('Card element not found')
-      return
-    }
-
-    try {
-      // Find the actual Polaroid card content (not the positioning container)
-      const cardContent = cardContainer.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
-      if (!cardContent) {
-        console.error('Card content not found')
-        return
-      }
-
-      // Wait for any images to load
-      const images = cardContent.querySelectorAll('img')
-      await Promise.all(
-        Array.from(images).map((img) => {
-          if (img.complete) return Promise.resolve()
-          return new Promise((resolve, reject) => {
-            img.onload = resolve
-            img.onerror = reject
-            // Set a timeout in case image fails to load
-            setTimeout(resolve, 2000)
-          })
-        })
-      )
-
-      // Capture the card content as a canvas
-      const canvas = await html2canvas(cardContent, {
-        backgroundColor: '#ffffff',
-        scale: 3, // Very high quality for sharp export
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: cardContent.offsetWidth,
-        height: cardContent.offsetHeight,
-        windowWidth: cardContent.offsetWidth,
-        windowHeight: cardContent.offsetHeight,
-      })
-
-      // Convert canvas to blob and download
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          alert('Failed to create image. Please try again.')
-          return
-        }
-
-        // Create download link
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `cafe-cursor-polaroid-${Date.now()}.png`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-      }, 'image/png')
-    } catch (error) {
-      console.error('Error downloading card:', error)
-      alert('Failed to download card. Please try again.')
-    }
   }
 
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -612,18 +538,6 @@ export default function Home() {
                 // Stop propagation to prevent canvas panning when touching cards (mobile)
                 e.stopPropagation()
               }}
-              onClick={(e) => {
-                // Select card for download
-                e.stopPropagation()
-                setSelectedCardId(card.id)
-              }}
-              ref={(el) => {
-                if (el) {
-                  cardRefs.current.set(card.id, el)
-                } else {
-                  cardRefs.current.delete(card.id)
-                }
-              }}
             >
               <PolaroidCard 
                 initialPosition={card.position}
@@ -635,7 +549,7 @@ export default function Home() {
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
-                isSelected={draggingCardId === card.id || selectedCardId === card.id}
+                isSelected={draggingCardId === card.id}
                 onDragStart={() => setDraggingCardId(card.id)}
                 onDragEnd={() => setDraggingCardId(null)}
               />
@@ -693,7 +607,6 @@ export default function Home() {
         <StickyNoteToolbar 
           onColorSelect={handleAddCard}
           onCameraClick={handleCameraButtonClick}
-          onDownloadClick={handleDownloadCard}
         />
       </div>
 
