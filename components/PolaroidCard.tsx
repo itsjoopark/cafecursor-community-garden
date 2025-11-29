@@ -22,8 +22,8 @@ interface PolaroidCardProps {
 export default function PolaroidCard({ 
   initialPosition = { x: 0, y: 0 }, 
   onPositionChange,
-  initialTitle = 'Title',
-  initialDescription = 'description',
+  initialTitle = 'Add Name',
+  initialDescription = 'type a message',
   initialImageUrl = defaultImageFrame,
   onTitleChange,
   onDescriptionChange,

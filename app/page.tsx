@@ -34,8 +34,8 @@ export default function Home() {
         x: -canvasOffset.x + (Math.random() * 200 - 100), // Add in viewport center with slight offset
         y: -canvasOffset.y + (Math.random() * 200 - 100)
       },
-      title: 'Title',
-      description: 'description',
+      title: 'Add Name',
+      description: 'type a message',
       imageUrl: '/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg'
     }
     setCards([...cards, newCard])
