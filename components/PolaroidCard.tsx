@@ -309,13 +309,14 @@ export default function PolaroidCard({
                 value={title}
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
+                maxLength={30}
                 className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
                 style={{ fontSize: '13.263px' }}
                 data-node-id="70:80"
               />
             ) : (
               <p 
-                className="font-cursor-gothic-bold text-black cursor-text"
+                className="font-cursor-gothic-bold text-black cursor-text overflow-hidden text-ellipsis whitespace-nowrap"
                 style={{ fontSize: '13.263px' }}
                 onClick={handleTitleClick}
                 data-node-id="70:80"
@@ -332,13 +333,14 @@ export default function PolaroidCard({
                 value={description}
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
+                maxLength={45}
                 className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
                 style={{ fontSize: '9.947px' }}
                 data-node-id="70:81"
               />
             ) : (
               <p 
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text overflow-hidden text-ellipsis whitespace-nowrap"
                 style={{ fontSize: '9.947px' }}
                 onClick={handleDescriptionClick}
                 data-node-id="70:81"
@@ -396,12 +398,13 @@ export default function PolaroidCard({
                 value={title}
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
+                maxLength={30}
                 className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
                 style={{ fontSize: '11px' }}
               />
             ) : (
               <p 
-                className="font-cursor-gothic-bold text-black cursor-text"
+                className="font-cursor-gothic-bold text-black cursor-text overflow-hidden text-ellipsis whitespace-nowrap"
                 style={{ fontSize: '11px' }}
                 onClick={handleTitleClick}
               >
@@ -417,12 +420,13 @@ export default function PolaroidCard({
                 value={description}
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
+                maxLength={45}
                 className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
                 style={{ fontSize: '8.25px' }}
               />
             ) : (
               <p 
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black cursor-text overflow-hidden text-ellipsis whitespace-nowrap"
                 style={{ fontSize: '8.25px' }}
                 onClick={handleDescriptionClick}
               >
