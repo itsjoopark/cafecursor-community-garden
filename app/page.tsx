@@ -296,8 +296,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Zoom Controls - Fixed at bottom right */}
-      <div className="fixed bottom-[50px] right-[50px] z-30 flex flex-col gap-2">
+      {/* Zoom Controls - Fixed at bottom right - Closer to edge on mobile */}
+      <div className="fixed bottom-[50px] right-[20px] md:right-[50px] z-30 flex flex-col gap-2">
         <button
           onClick={handleZoomIn}
           className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] text-2xl font-bold hover:bg-white/80 transition-colors shadow-lg"
