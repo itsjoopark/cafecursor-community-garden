@@ -339,17 +339,45 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
-      {/* Fixed Header - Anchored to top with 50px gap */}
+      {/* Fixed Header - New Design with Logo and Cafe Name */}
       <div 
-        className="fixed top-[50px] left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center p-[10px] rounded-[9px] bg-white/60 backdrop-blur-sm shadow-lg"
-        data-node-id="48:29"
+        className="fixed top-[50px] left-1/2 transform -translate-x-1/2 z-30 flex flex-col gap-[5px] items-center"
+        data-node-id="75:266"
       >
-        <h1 
-          className="font-cursor-gothic-bold leading-normal not-italic text-[#14120b] text-[24px] sm:text-[28px] md:text-[30px] whitespace-nowrap"
-          data-node-id="48:28"
+        {/* Cursor Logo */}
+        <div 
+          className="relative shrink-0"
+          style={{ width: '92px', height: '22px' }}
+          data-name="LOCKUP_HORIZONTAL_2D_LIGHT 2"
+          data-node-id="75:255"
         >
-          Cafe Cursor Community Garden
-        </h1>
+          <img 
+            src="/assets/3c804cdd48f91d0375989343f0e5a7f464a3f595.svg"
+            alt="Cursor Logo"
+            className="block w-full h-full"
+          />
+        </div>
+
+        {/* Cafe Name Container */}
+        <div 
+          className="box-border flex gap-[10px] items-center justify-center px-[10px] py-[5px] rounded-[9px] bg-white/60 backdrop-blur-sm shadow-lg"
+          data-node-id="72:154"
+        >
+          <h1 
+            className="italic leading-normal relative shrink-0 text-[#14120b] text-[30px] whitespace-nowrap"
+            style={{ fontFamily: "'Bodoni 72', 'Bodoni MT', Georgia, serif" }}
+            data-node-id="72:155"
+          >
+            Cafe Cursor Toronto
+          </h1>
+        </div>
+
+        {/* Spacer for Visual Balance */}
+        <div 
+          className="shrink-0"
+          style={{ width: '92px', height: '22px' }}
+          data-node-id="75:264"
+        />
       </div>
 
       {/* Infinite Canvas - Pannable Background */}
