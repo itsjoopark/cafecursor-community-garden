@@ -263,9 +263,9 @@ export default function PolaroidCard({
       <div className="hidden md:block relative w-full h-full">
         <div 
           className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
-            isDragging ? 'border-blue-400 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
+            isDragging ? 'border-blue-200 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
           }`}
-          style={{ borderWidth: isDragging ? '2.5px' : '0.829px' }}
+          style={{ borderWidth: isDragging ? '2px' : '0.829px' }}
           data-name="Polaroid Card - Backpane (White)"
           data-node-id="70:76"
         >
@@ -354,9 +354,9 @@ export default function PolaroidCard({
       <div className="block md:hidden relative w-full h-full">
         <div 
           className={`bg-white overflow-clip rounded-[2.4px] w-full h-full border transition-all duration-150 ${
-            isDragging ? 'border-blue-400 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
+            isDragging ? 'border-blue-200 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
           }`}
-          style={{ borderWidth: isDragging ? '2px' : '0.68px' }}
+          style={{ borderWidth: isDragging ? '1.5px' : '0.68px' }}
           data-name="Polaroid Card - Backpane (White)"
         >
           {/* Image Frame */}
