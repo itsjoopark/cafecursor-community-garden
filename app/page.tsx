@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import html2canvas from 'html2canvas'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
+import { uploadImage, saveCard, updateCard, getAllCards, subscribeToCards } from '@/lib/supabase'
 
 interface Card {
   id: string
@@ -44,12 +45,23 @@ export default function Home() {
     pendingCardVariant.current = variant
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file && pendingCardVariant.current) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const imageUrl = reader.result as string
+      try {
+        // Generate unique filename
+        const timestamp = Date.now()
+        const randomId = Math.random().toString(36).substring(7)
+        const fileName = `polaroid-${timestamp}-${randomId}.${file.name.split('.').pop()}`
+        
+        // Upload image to Supabase Storage
+        const imageUrl = await uploadImage(file, fileName)
+        
+        if (!imageUrl) {
+          alert('Failed to upload image. Please try again.')
+          e.target.value = ''
+          return
+        }
         
         // Generate date stamp
         const now = new Date()
@@ -68,7 +80,7 @@ export default function Home() {
         
         // Create card with the uploaded image and date stamp
         const newCard: Card = {
-          id: `card-${Date.now()}-${Math.random()}`,
+          id: `card-${timestamp}-${randomId}`,
           variant: pendingCardVariant.current!,
           position: { 
             x: worldX,
@@ -79,40 +91,75 @@ export default function Home() {
           imageUrl: imageUrl,
           dateStamp: dateStamp
         }
-        setCards([...cards, newCard])
+        
+        // Save card to database
+        const saved = await saveCard({
+          id: newCard.id,
+          variant: newCard.variant,
+          position_x: newCard.position.x,
+          position_y: newCard.position.y,
+          title: newCard.title,
+          description: newCard.description,
+          image_url: newCard.imageUrl,
+          date_stamp: newCard.dateStamp || ''
+        })
+        
+        if (saved) {
+          // Add card to local state (will also be received via real-time subscription)
+          setCards([...cards, newCard])
+        } else {
+          alert('Failed to save card. Please try again.')
+        }
         
         // Reset pending variant
         pendingCardVariant.current = null
+      } catch (error) {
+        console.error('Error uploading image:', error)
+        alert('Failed to upload image. Please try again.')
       }
-      reader.readAsDataURL(file)
     }
     
     // Reset file input so the same file can be selected again
     e.target.value = ''
   }
 
-  const handleCardPositionChange = (cardId: string, newPosition: { x: number; y: number }) => {
+  const handleCardPositionChange = async (cardId: string, newPosition: { x: number; y: number }) => {
     setCards(cards.map(card => 
       card.id === cardId ? { ...card, position: newPosition } : card
     ))
+    
+    // Update in database
+    await updateCard(cardId, {
+      position_x: newPosition.x,
+      position_y: newPosition.y
+    })
   }
 
-  const handleCardTitleChange = (cardId: string, newTitle: string) => {
+  const handleCardTitleChange = async (cardId: string, newTitle: string) => {
     setCards(cards.map(card =>
       card.id === cardId ? { ...card, title: newTitle } : card
     ))
+    
+    // Update in database
+    await updateCard(cardId, { title: newTitle })
   }
 
-  const handleCardDescriptionChange = (cardId: string, newDescription: string) => {
+  const handleCardDescriptionChange = async (cardId: string, newDescription: string) => {
     setCards(cards.map(card =>
       card.id === cardId ? { ...card, description: newDescription } : card
     ))
+    
+    // Update in database
+    await updateCard(cardId, { description: newDescription })
   }
 
-  const handleCardImageChange = (cardId: string, newImageUrl: string) => {
+  const handleCardImageChange = async (cardId: string, newImageUrl: string) => {
     setCards(cards.map(card =>
       card.id === cardId ? { ...card, imageUrl: newImageUrl } : card
     ))
+    
+    // Update in database
+    await updateCard(cardId, { image_url: newImageUrl })
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -410,6 +457,50 @@ export default function Home() {
       window.removeEventListener('keyup', handleKeyUp)
     }
   }, [isSpacebarHeld])
+
+  // Load all cards from database on mount
+  useEffect(() => {
+    const loadCards = async () => {
+      const dbCards = await getAllCards()
+      const formattedCards: Card[] = dbCards.map(dbCard => ({
+        id: dbCard.id,
+        variant: dbCard.variant,
+        position: { x: dbCard.position_x, y: dbCard.position_y },
+        title: dbCard.title,
+        description: dbCard.description,
+        imageUrl: dbCard.image_url,
+        dateStamp: dbCard.date_stamp
+      }))
+      setCards(formattedCards)
+    }
+    
+    loadCards()
+
+    // Subscribe to real-time card insertions
+    const unsubscribe = subscribeToCards((newCard) => {
+      // Check if card already exists (avoid duplicates)
+      setCards(prevCards => {
+        if (prevCards.some(c => c.id === newCard.id)) {
+          return prevCards
+        }
+        
+        // Add new card from real-time subscription
+        return [...prevCards, {
+          id: newCard.id,
+          variant: newCard.variant,
+          position: { x: newCard.position_x, y: newCard.position_y },
+          title: newCard.title,
+          description: newCard.description,
+          imageUrl: newCard.image_url,
+          dateStamp: newCard.date_stamp
+        }]
+      })
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [])
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
