@@ -474,7 +474,7 @@ export default function Home() {
             >
               <div className="text-center px-4">
                 <p className="text-[#14120b] text-base sm:text-lg opacity-50">
-                  Drag the background to pan around the infinite canvas
+                  Drag the canvas to move around
                 </p>
               </div>
             </div>
