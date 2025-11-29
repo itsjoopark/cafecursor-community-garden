@@ -161,13 +161,13 @@ export default function Home() {
     }
   }
 
-  const getTouchDistance = (touch1: Touch, touch2: Touch) => {
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch) => {
     const dx = touch2.clientX - touch1.clientX
     const dy = touch2.clientY - touch1.clientY
     return Math.sqrt(dx * dx + dy * dy)
   }
 
-  const getTouchCenter = (touch1: Touch, touch2: Touch) => {
+  const getTouchCenter = (touch1: React.Touch, touch2: React.Touch) => {
     return {
       x: (touch1.clientX + touch2.clientX) / 2,
       y: (touch1.clientY + touch2.clientY) / 2,
