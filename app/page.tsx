@@ -449,7 +449,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (isPanning || isPinching) {
+    if (isPanning || isPinching || isStamping) {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
       window.addEventListener('touchmove', handleTouchMove, { passive: false })
@@ -462,7 +462,7 @@ export default function Home() {
         window.removeEventListener('touchend', handleTouchEnd)
       }
     }
-  }, [isPanning, isPinching, panStart, canvasOffset, zoom, lastTouchDistance])
+  }, [isPanning, isPinching, isStamping, panStart, canvasOffset, zoom, lastTouchDistance])
 
   useEffect(() => {
     // Add wheel event listener for zooming
