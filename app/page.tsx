@@ -46,6 +46,19 @@ export default function Home() {
     userId.current = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
   }
 
+  // Generate random background plants (100 seedlings scattered across canvas)
+  const backgroundPlants = useRef<{ id: string; x: number; y: number }[]>([])
+  if (backgroundPlants.current.length === 0) {
+    // Generate 100 random positions across a large canvas area
+    for (let i = 0; i < 100; i++) {
+      backgroundPlants.current.push({
+        id: `plant-${i}`,
+        x: Math.random() * 4000 - 2000, // -2000 to 2000
+        y: Math.random() * 4000 - 2000, // -2000 to 2000
+      })
+    }
+  }
+
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
 
@@ -656,6 +669,23 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
+          {/* Background plants - scattered seedlings */}
+          {backgroundPlants.current.map((plant) => (
+            <div
+              key={plant.id}
+              className="absolute pointer-events-none select-none opacity-40"
+              style={{
+                left: `${plant.x}px`,
+                top: `${plant.y}px`,
+                transform: 'translate(-50%, -50%)',
+                fontSize: '20px',
+                lineHeight: 1,
+              }}
+            >
+              🌱
+            </div>
+          ))}
+
           {/* Render all Polaroid cards at their world positions */}
           {cards.map((card) => (
             <div 
