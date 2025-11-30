@@ -2,11 +2,9 @@
 
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
-import html2canvas from 'html2canvas'
 import { supabase } from '@/lib/supabase'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
-const shareIcon = "/assets/90b8f138c6f3c265f6eabac618542b6a23368454.svg"
 
 interface PolaroidCardProps {
   initialPosition?: { x: number; y: number }
@@ -53,7 +51,6 @@ export default function PolaroidCard({
   const titleRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [isSharing, setIsSharing] = useState(false)
   const [showDeleteOverlay, setShowDeleteOverlay] = useState(false)
 
   // Check if image has been customized (not the default)
@@ -266,168 +263,6 @@ export default function PolaroidCard({
     }
   }
 
-  const handleShare = async () => {
-    if (!cardContentRef.current) return
-    
-    setIsSharing(true)
-    
-    try {
-      // Find the Polaroid card content element
-      const originalCard = cardContentRef.current.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
-      
-      if (!originalCard) {
-        console.error('Card content not found')
-        setIsSharing(false)
-        return
-      }
-
-      // Hide delete overlay during capture
-      const wasDeleteOverlayVisible = showDeleteOverlay
-      if (showDeleteOverlay) {
-        setShowDeleteOverlay(false)
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
-
-      // Create a clean clone for capturing
-      const clone = originalCard.cloneNode(true) as HTMLElement
-      
-      // Create a clean container for the clone
-      const captureContainer = document.createElement('div')
-      captureContainer.style.position = 'fixed'
-      captureContainer.style.left = '-9999px'
-      captureContainer.style.top = '0'
-      captureContainer.style.zIndex = '-1'
-      captureContainer.style.backgroundColor = '#ffffff'
-      captureContainer.style.padding = '20px'
-      
-      // Clean up the clone - remove all transforms and transitions
-      clone.style.transform = 'none'
-      clone.style.transition = 'none'
-      clone.style.position = 'relative'
-      clone.style.margin = '0'
-      clone.style.boxShadow = 'none'
-      
-      // Remove delete overlays from clone
-      const deleteOverlays = clone.querySelectorAll('[data-delete-overlay]')
-      deleteOverlays.forEach(overlay => overlay.remove())
-      
-      // Fix image frame background - make transparent when there's a custom image
-      const imageFrames = clone.querySelectorAll('[data-image-frame]')
-      imageFrames.forEach((frame: HTMLElement) => {
-        if (hasCustomImage) {
-          frame.style.backgroundColor = 'transparent'
-        }
-      })
-      
-      // Ensure all images are visible
-      const images = clone.querySelectorAll('img')
-      images.forEach((img: HTMLImageElement) => {
-        img.style.display = 'block'
-        img.style.visibility = 'visible'
-        img.style.opacity = '1'
-        img.style.objectFit = 'cover'
-      })
-      
-      // Add clone to container and container to body
-      captureContainer.appendChild(clone)
-      document.body.appendChild(captureContainer)
-      
-      // Wait for layout and images to settle
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
-      // Ensure all images in original card are loaded before capturing clone
-      const originalImages = originalCard.querySelectorAll('img')
-      await Promise.all(
-        Array.from(originalImages).map((img) => {
-          if (img.complete) return Promise.resolve()
-          return new Promise((resolve) => {
-            img.onload = () => resolve(true)
-            img.onerror = () => resolve(false)
-            setTimeout(() => resolve(false), 3000)
-          })
-        })
-      )
-      
-      // Capture the clean clone
-      const canvas = await html2canvas(clone, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        imageTimeout: 0,
-        logging: false,
-        width: clone.offsetWidth,
-        height: clone.offsetHeight,
-        windowWidth: clone.offsetWidth,
-        windowHeight: clone.offsetHeight
-      })
-      
-      // Clean up - remove the container
-      document.body.removeChild(captureContainer)
-      
-      // Restore delete overlay state
-      if (wasDeleteOverlayVisible) {
-        setShowDeleteOverlay(true)
-      }
-
-      // Convert canvas to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob!)
-        }, 'image/png', 1.0)
-      })
-
-      // Upload to Supabase Storage (CDN)
-      const fileName = `shared/polaroid-${Date.now()}-${Math.random().toString(36).substring(7)}.png`
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('polaroid-images')
-        .upload(fileName, blob, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: 'image/png'
-        })
-
-      if (uploadError) {
-        console.error('Error uploading to CDN:', uploadError)
-        // Fallback: Download the image locally
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `cafe-cursor-polaroid-${Date.now()}.png`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-        alert('Image downloaded! Upload failed, but you can share the downloaded file.')
-        setIsSharing(false)
-        return
-      }
-
-      // Get public URL from CDN
-      const { data: { publicUrl } } = supabase.storage
-        .from('polaroid-images')
-        .getPublicUrl(uploadData.path)
-
-      // Open image in new tab
-      window.open(publicUrl, '_blank')
-      
-      // Also try to copy the URL to clipboard
-      try {
-        await navigator.clipboard.writeText(publicUrl)
-        alert('Image opened in new tab! URL copied to clipboard - you can paste it to share on Twitter, email, etc.')
-      } catch (clipboardError) {
-        alert('Image opened in new tab! Right-click to copy the image or URL to share.')
-      }
-      
-    } catch (error) {
-      console.error('Error sharing:', error)
-      alert('Failed to share. Please try again.')
-    }
-    
-    setIsSharing(false)
-  }
-
   useEffect(() => {
     if (isEditingTitle && titleRef.current) {
       titleRef.current.focus()
@@ -471,41 +306,6 @@ export default function PolaroidCard({
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
-      {/* Share Button - Only visible when image is uploaded */}
-      {hasCustomImage && (
-        <div className="absolute left-1/2 transform -translate-x-1/2 -top-[46px] z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              handleShare()
-            }}
-            disabled={isSharing}
-            className="bg-[#d9d9d9] box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] hover:bg-[#c5c5c5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-            }}
-            data-name="Button_Share"
-            data-node-id="77:491"
-          >
-            <div className="flex items-center justify-center shrink-0 w-[15.614px] h-[15.614px]">
-              <div className="transform rotate-[54deg]">
-                <img 
-                  src={shareIcon}
-                  alt="Share"
-                  className="block w-[11.179px] h-[11.178px]"
-                  crossOrigin="anonymous"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] h-[22px] justify-end leading-[0] shrink-0 text-[#14120b] text-[15px] w-[41px]">
-              <p className="leading-normal">
-                {isSharing ? 'Sharing...' : 'Share'}
-              </p>
-            </div>
-          </button>
-        </div>
-      )}
-
       {/* Card Content Container */}
       <div ref={cardContentRef} className="w-full h-full">
         {/* Desktop Layout */}
