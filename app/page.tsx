@@ -46,15 +46,22 @@ export default function Home() {
     userId.current = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
   }
 
-  // Generate random background plants (100 seedlings scattered across canvas)
-  const backgroundPlants = useRef<{ id: string; x: number; y: number }[]>([])
-  if (backgroundPlants.current.length === 0) {
-    // Generate 100 random positions across a large canvas area
-    for (let i = 0; i < 100; i++) {
-      backgroundPlants.current.push({
-        id: `plant-${i}`,
+  // Generate random background emojis scattered across canvas
+  const backgroundEmojis = useRef<{ id: string; x: number; y: number; emoji: string }[]>([])
+  if (backgroundEmojis.current.length === 0) {
+    const emojiTypes = ['🌱', '🦝', '🍁', '🏙️', '☕', '💡', '🥐']
+    const totalEmojis = 100
+    
+    // Generate random positions across a large canvas area
+    for (let i = 0; i < totalEmojis; i++) {
+      // Randomly select an emoji type
+      const emoji = emojiTypes[Math.floor(Math.random() * emojiTypes.length)]
+      
+      backgroundEmojis.current.push({
+        id: `emoji-${i}`,
         x: Math.random() * 4000 - 2000, // -2000 to 2000
         y: Math.random() * 4000 - 2000, // -2000 to 2000
+        emoji: emoji
       })
     }
   }
@@ -669,14 +676,14 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
-          {/* Background plants - scattered seedlings */}
-          {backgroundPlants.current.map((plant) => (
+          {/* Background emojis - scattered decorations */}
+          {backgroundEmojis.current.map((item) => (
             <div
-              key={plant.id}
+              key={item.id}
               className="absolute pointer-events-none select-none"
               style={{
-                left: `${plant.x}px`,
-                top: `${plant.y}px`,
+                left: `${item.x}px`,
+                top: `${item.y}px`,
                 transform: 'translate(-50%, -50%)',
                 fontSize: '24px',
                 lineHeight: 1,
@@ -684,7 +691,7 @@ export default function Home() {
                 zIndex: 0,
               }}
             >
-              🌱
+              {item.emoji}
             </div>
           ))}
 
