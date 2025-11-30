@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
+const trashIcon = "/assets/55b01994f4fd191d870dfd4f983d47ffd50168dd.svg"
 
 interface PolaroidCardProps {
   initialPosition?: { x: number; y: number }
@@ -629,17 +630,21 @@ export default function PolaroidCard({
                 onDelete?.()
               }
             }}
-            className="w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-colors border border-gray-200"
+            className="bg-[#ebeae5] box-border flex gap-[10px] items-center p-[10px] rounded-[25px] hover:bg-[#ddd9ce] transition-colors"
             style={{
-              boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.15)',
+              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
             }}
             data-name="Button_Delete"
-            data-node-id="80:650"
+            data-node-id="86:674"
             aria-label="Delete card"
           >
-            <span className="text-[#52525b] text-[20px] font-bold leading-none">
-              ×
-            </span>
+            <div className="overflow-clip relative shrink-0 w-[20px] h-[20px]">
+              <img 
+                src={trashIcon}
+                alt="Delete"
+                className="block w-full h-full"
+              />
+            </div>
           </button>
         </div>
       )}
