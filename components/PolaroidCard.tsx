@@ -202,7 +202,8 @@ export default function PolaroidCard({
     setIsEditingDescription(false)
   }
 
-  const handleImageClick = () => {
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
     // If image has been uploaded, show delete overlay instead
     if (hasCustomImage) {
       setShowDeleteOverlay(true)
@@ -212,7 +213,18 @@ export default function PolaroidCard({
     fileInputRef.current?.click()
   }
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  const handleImageTouch = (e: React.TouchEvent) => {
+    e.stopPropagation()
+    // If image has been uploaded, show delete overlay instead
+    if (hasCustomImage) {
+      setShowDeleteOverlay(true)
+      return
+    }
+    // Otherwise, allow image upload
+    fileInputRef.current?.click()
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation()
     if (window.confirm('Are you sure you want to delete this card?')) {
       onDelete?.()
@@ -220,7 +232,7 @@ export default function PolaroidCard({
     setShowDeleteOverlay(false)
   }
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
+  const handleOverlayClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation()
     // Clicking on overlay (not the delete text) closes it
     const target = e.target as HTMLElement
@@ -477,6 +489,7 @@ export default function PolaroidCard({
             data-node-id="70:97"
             data-image-frame
             onClick={handleImageClick}
+            onTouchEnd={handleImageTouch}
           >
             <img 
               src={imageUrl}
@@ -490,11 +503,13 @@ export default function PolaroidCard({
                 className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
                 data-delete-overlay
                 onClick={handleOverlayClick}
+                onTouchEnd={handleOverlayClick}
               >
                 <div 
                   className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
                   data-delete-text
                   onClick={handleDeleteClick}
+                  onTouchEnd={handleDeleteClick}
                 >
                   <p className="leading-normal whitespace-pre">Delete?</p>
                 </div>
@@ -587,6 +602,7 @@ export default function PolaroidCard({
             data-name="Image Frame"
             data-image-frame
             onClick={handleImageClick}
+            onTouchEnd={handleImageTouch}
           >
             <img 
               src={imageUrl}
@@ -600,11 +616,13 @@ export default function PolaroidCard({
                 className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
                 data-delete-overlay
                 onClick={handleOverlayClick}
+                onTouchEnd={handleOverlayClick}
               >
                 <div 
                   className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
                   data-delete-text
                   onClick={handleDeleteClick}
+                  onTouchEnd={handleDeleteClick}
                 >
                   <p className="leading-normal whitespace-pre">Delete?</p>
                 </div>
