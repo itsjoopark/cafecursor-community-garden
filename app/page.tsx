@@ -673,13 +673,15 @@ export default function Home() {
           {backgroundPlants.current.map((plant) => (
             <div
               key={plant.id}
-              className="absolute pointer-events-none select-none opacity-40"
+              className="absolute pointer-events-none select-none"
               style={{
                 left: `${plant.x}px`,
                 top: `${plant.y}px`,
                 transform: 'translate(-50%, -50%)',
-                fontSize: '20px',
+                fontSize: '24px',
                 lineHeight: 1,
+                opacity: 0.75,
+                zIndex: 0,
               }}
             >
               🌱
