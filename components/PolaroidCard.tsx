@@ -467,7 +467,7 @@ export default function PolaroidCard({
                     onBlur={handleOverlayTextBlur}
                     maxLength={150}
                     placeholder="Add a caption..."
-                    className="w-[90%] h-[50%] bg-white/90 text-black text-center p-4 rounded-lg border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px]"
+                    className="w-[90%] h-[50%] bg-transparent text-white text-center p-4 border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px] placeholder:text-white/60"
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                   />
@@ -615,7 +615,7 @@ export default function PolaroidCard({
                     onBlur={handleOverlayTextBlur}
                     maxLength={150}
                     placeholder="Add a caption..."
-                    className="w-[90%] h-[50%] bg-white/90 text-black text-center p-4 rounded-lg border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px]"
+                    className="w-[90%] h-[50%] bg-transparent text-white text-center p-4 border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px] placeholder:text-white/60"
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                   />
