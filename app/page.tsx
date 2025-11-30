@@ -47,26 +47,6 @@ export default function Home() {
     userId.current = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
   }
 
-  // Generate random background emojis scattered across canvas
-  const backgroundEmojis = useRef<{ id: string; x: number; y: number; emoji: string }[]>([])
-  if (backgroundEmojis.current.length === 0) {
-    const emojiTypes = ['🌱', '🦝', '🍁', '🏙️', '☕', '💡', '🥐']
-    const totalEmojis = 100
-    
-    // Generate random positions across a large canvas area
-    for (let i = 0; i < totalEmojis; i++) {
-      // Randomly select an emoji type
-      const emoji = emojiTypes[Math.floor(Math.random() * emojiTypes.length)]
-      
-      backgroundEmojis.current.push({
-        id: `emoji-${i}`,
-        x: Math.random() * 4000 - 2000, // -2000 to 2000
-        y: Math.random() * 4000 - 2000, // -2000 to 2000
-        emoji: emoji
-      })
-    }
-  }
-
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
 
@@ -689,25 +669,6 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
-          {/* Background emojis - scattered decorations */}
-          {backgroundEmojis.current.map((item) => (
-            <div
-              key={item.id}
-              className="absolute pointer-events-none select-none"
-              style={{
-                left: `${item.x}px`,
-                top: `${item.y}px`,
-                transform: 'translate(-50%, -50%)',
-                fontSize: '24px',
-                lineHeight: 1,
-                opacity: 0.75,
-                zIndex: 0,
-              }}
-            >
-              {item.emoji}
-            </div>
-          ))}
-
           {/* Render all Polaroid cards at their world positions */}
           {cards.map((card) => (
             <div 
