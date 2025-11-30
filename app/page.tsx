@@ -410,26 +410,58 @@ export default function Home() {
     
     loadCards()
 
-    // Subscribe to real-time card insertions
-    const unsubscribe = subscribeToCards((newCard) => {
-      // Check if card already exists (avoid duplicates)
-      setCards(prevCards => {
-        if (prevCards.some(c => c.id === newCard.id)) {
-          return prevCards
-        }
-        
-        // Add new card from real-time subscription
-        return [...prevCards, {
-          id: newCard.id,
-          variant: newCard.variant,
-          position: { x: newCard.position_x, y: newCard.position_y },
-          title: newCard.title,
-          description: newCard.description,
-          imageUrl: newCard.image_url,
-          dateStamp: newCard.date_stamp
-        }]
-      })
-    })
+    // Subscribe to real-time card changes (INSERT, UPDATE, DELETE)
+    const unsubscribe = subscribeToCards(
+      // On INSERT - add new card
+      (newCard) => {
+        setCards(prevCards => {
+          // Check if card already exists (avoid duplicates)
+          if (prevCards.some(c => c.id === newCard.id)) {
+            return prevCards
+          }
+          
+          console.log('🆕 New card added by another user:', newCard.id)
+          
+          // Add new card from real-time subscription
+          return [...prevCards, {
+            id: newCard.id,
+            variant: newCard.variant,
+            position: { x: newCard.position_x, y: newCard.position_y },
+            title: newCard.title,
+            description: newCard.description,
+            imageUrl: newCard.image_url,
+            dateStamp: newCard.date_stamp
+          }]
+        })
+      },
+      // On UPDATE - update existing card
+      (updatedCard) => {
+        setCards(prevCards => {
+          console.log('✏️ Card updated by another user:', updatedCard.id)
+          
+          return prevCards.map(card =>
+            card.id === updatedCard.id
+              ? {
+                  ...card,
+                  variant: updatedCard.variant,
+                  position: { x: updatedCard.position_x, y: updatedCard.position_y },
+                  title: updatedCard.title,
+                  description: updatedCard.description,
+                  imageUrl: updatedCard.image_url,
+                  dateStamp: updatedCard.date_stamp
+                }
+              : card
+          )
+        })
+      },
+      // On DELETE - remove card
+      (deletedCardId) => {
+        setCards(prevCards => {
+          console.log('🗑️ Card deleted by another user:', deletedCardId)
+          return prevCards.filter(card => card.id !== deletedCardId)
+        })
+      }
+    )
 
     return () => {
       unsubscribe()

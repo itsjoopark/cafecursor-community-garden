@@ -133,15 +133,36 @@ export async function getAllCards(): Promise<Card[]> {
   }
 }
 
-// Subscribe to real-time changes
-export function subscribeToCards(callback: (card: Card) => void) {
+// Subscribe to real-time changes (INSERT, UPDATE, DELETE)
+export function subscribeToCards(
+  onInsert: (card: Card) => void,
+  onUpdate: (card: Card) => void,
+  onDelete: (cardId: string) => void
+) {
   const channel = supabase
     .channel('cards-changes')
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'cards' },
       (payload) => {
-        callback(payload.new as Card)
+        console.log('Real-time INSERT:', payload.new)
+        onInsert(payload.new as Card)
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'cards' },
+      (payload) => {
+        console.log('Real-time UPDATE:', payload.new)
+        onUpdate(payload.new as Card)
+      }
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'cards' },
+      (payload) => {
+        console.log('Real-time DELETE:', payload.old)
+        onDelete((payload.old as Card).id)
       }
     )
     .subscribe()
@@ -149,5 +170,30 @@ export function subscribeToCards(callback: (card: Card) => void) {
   return () => {
     supabase.removeChannel(channel)
   }
+}
+
+// Subscribe to real-time card positions (for live dragging - optional)
+export function subscribeToDragging(
+  onDragUpdate: (data: { cardId: string; position: { x: number; y: number }; userId: string }) => void
+) {
+  const channel = supabase
+    .channel('card-dragging')
+    .on('broadcast', { event: 'card-drag' }, (payload) => {
+      onDragUpdate(payload.payload as { cardId: string; position: { x: number; y: number }; userId: string })
+    })
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
+// Broadcast card dragging position (for live dragging - optional)
+export function broadcastDragging(cardId: string, position: { x: number; y: number }, userId: string) {
+  supabase.channel('card-dragging').send({
+    type: 'broadcast',
+    event: 'card-drag',
+    payload: { cardId, position, userId }
+  })
 }
 
