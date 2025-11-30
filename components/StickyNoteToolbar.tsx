@@ -31,13 +31,12 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: Stic
         e.preventDefault()
         handleCameraClick()
       }}
-      className={`border border-[#bfbfbf] border-solid box-border flex items-center justify-center w-12 h-12 rounded-[10px] bg-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
+      className={`bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center hover:bg-white/80 transition-colors shadow-lg cursor-pointer ${
         isPressed ? 'scale-95' : ''
       }`}
       style={{ 
         WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+        touchAction: 'manipulation'
       }}
       aria-label="Take or upload photo"
       title="Take or upload photo"
