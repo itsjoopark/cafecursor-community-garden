@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import html2canvas from 'html2canvas'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
 import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards, subscribeToDragging, broadcastDragging } from '@/lib/supabase'
@@ -337,6 +338,52 @@ export default function Home() {
     setZoom(1)
   }
 
+  const handleSaveCanvas = async () => {
+    if (!canvasRef.current) return
+
+    try {
+      // Get the canvas container element that has all the cards
+      const canvasElement = canvasRef.current
+
+      // Capture the canvas with all cards
+      const canvas = await html2canvas(canvasElement, {
+        backgroundColor: '#F0EFEA', // Match canvas background color
+        scale: 2, // High quality (2x resolution)
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: canvasElement.scrollWidth,
+        height: canvasElement.scrollHeight,
+        windowWidth: canvasElement.scrollWidth,
+        windowHeight: canvasElement.scrollHeight,
+      })
+
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (!blob) return
+
+        // Create download link
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+        link.href = url
+        link.download = `cursor-cafe-canvas-${timestamp}.png`
+        
+        // Trigger download
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        // Clean up
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+
+    } catch (error) {
+      console.error('Error saving canvas:', error)
+      alert('Failed to save canvas. Please try again.')
+    }
+  }
+
   const handleKeyDown = (e: KeyboardEvent) => {
     // Check if user is typing in an input field
     const target = e.target as HTMLElement
@@ -650,10 +697,10 @@ export default function Home() {
       {/* Save Canvas Button - Fixed at bottom left */}
       <div className="fixed bottom-[50px] left-[20px] md:left-[50px] z-30">
         <button
-          onClick={() => alert('Save Canvas feature - Coming soon!')}
+          onClick={handleSaveCanvas}
           className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] font-['Cursor_Gothic:Regular',sans-serif] text-[21px] hover:bg-white/80 transition-colors shadow-lg"
           aria-label="Save canvas"
-          title="Save canvas"
+          title="Save canvas as PNG"
         >
           ⤓
         </button>
