@@ -815,6 +815,22 @@ export default function Home() {
         }}
         aria-label="Capture or upload photo"
       />
+
+      {/* Footer Credit Text */}
+      <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+        <p className="font-['Cursor_Gothic:Regular',sans-serif] text-[#bfbfbf] text-[10px] whitespace-nowrap">
+          <span>made by </span>
+          <a 
+            className="underline cursor-pointer pointer-events-auto hover:text-gray-400 transition-colors"
+            href="https://x.com/itsjulespark"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            @itsjulespark
+          </a>
+          <span> for cursor with cursor</span>
+        </p>
+      </div>
     </main>
   )
 }
