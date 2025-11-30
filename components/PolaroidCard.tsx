@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
+const shareIcon = "/assets/90b8f138c6f3c265f6eabac618542b6a23368454.svg"
 
 interface PolaroidCardProps {
   initialPosition?: { x: number; y: number }
@@ -195,10 +196,19 @@ export default function PolaroidCard({
   }
 
   const handleImageClick = () => {
+    // Prevent changing image if a custom image has already been uploaded
+    if (hasCustomImage) {
+      return
+    }
     fileInputRef.current?.click()
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent changing image if a custom image has already been uploaded
+    if (hasCustomImage) {
+      return
+    }
+    
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
@@ -215,6 +225,30 @@ export default function PolaroidCard({
         setDateStamp(`${month}/${day}/${year}`)
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const handleShare = async () => {
+    // Use Web Share API if available, otherwise copy URL
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title,
+          text: `Check out my Polaroid from Cafe Cursor Toronto: ${description}`,
+          url: window.location.href,
+        })
+      } catch (err) {
+        // User cancelled or share failed
+        console.log('Share cancelled or failed')
+      }
+    } else {
+      // Fallback: Copy current URL to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href)
+        alert('Link copied to clipboard!')
+      } catch (err) {
+        console.error('Failed to copy:', err)
+      }
     }
   }
 
@@ -261,6 +295,36 @@ export default function PolaroidCard({
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
+      {/* Share Button - Only visible when image is uploaded */}
+      {hasCustomImage && (
+        <div className="absolute left-1/2 transform -translate-x-1/2 -top-[46px] z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleShare()
+            }}
+            className="border border-[#f54e00] border-solid box-border flex gap-[10px] items-center justify-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-[#fff5f0] transition-colors shadow-md"
+            data-name="Button_Share"
+            data-node-id="77:426"
+          >
+            <div className="flex gap-[5px] items-center">
+              <div className="flex items-center justify-center w-[15.614px] h-[15.614px]">
+                <div className="transform rotate-[54deg]">
+                  <img 
+                    src={shareIcon}
+                    alt="Share"
+                    className="block w-[11.179px] h-[11.178px]"
+                  />
+                </div>
+              </div>
+              <p className="font-['Cursor_Gothic:Regular',sans-serif] text-[#f54e00] text-[15px] leading-normal">
+                Share
+              </p>
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Desktop Layout */}
       <div className="hidden md:block relative w-full h-full">
         <div 
@@ -273,7 +337,9 @@ export default function PolaroidCard({
         >
           {/* Image Frame */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] cursor-pointer hover:opacity-90 transition-opacity bg-[#14120b] overflow-hidden"
+            className={`absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] transition-opacity bg-[#14120b] overflow-hidden ${
+              hasCustomImage ? 'cursor-default' : 'cursor-pointer hover:opacity-90'
+            }`}
             data-name="Image Frame"
             data-node-id="70:97"
             data-image-frame
@@ -365,7 +431,9 @@ export default function PolaroidCard({
         >
           {/* Image Frame */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] cursor-pointer hover:opacity-90 transition-opacity bg-[#14120b] overflow-hidden"
+            className={`absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] transition-opacity bg-[#14120b] overflow-hidden ${
+              hasCustomImage ? 'cursor-default' : 'cursor-pointer hover:opacity-90'
+            }`}
             data-name="Image Frame"
             data-image-frame
             onClick={handleImageClick}

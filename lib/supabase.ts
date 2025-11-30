@@ -93,6 +93,26 @@ export async function updateCard(cardId: string, updates: Partial<Omit<Card, 'id
   }
 }
 
+// Delete card from database
+export async function deleteCard(cardId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('cards')
+      .delete()
+      .eq('id', cardId)
+
+    if (error) {
+      console.error('Error deleting card:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error deleting card:', error)
+    return false
+  }
+}
+
 // Get all cards from database
 export async function getAllCards(): Promise<Card[]> {
   try {
