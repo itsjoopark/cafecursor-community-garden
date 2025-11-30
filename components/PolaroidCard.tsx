@@ -543,7 +543,8 @@ export default function PolaroidCard({
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 maxLength={30}
-                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
+                placeholder="Add Name"
+                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '13.263px' }}
                 data-node-id="70:80"
               />
@@ -554,7 +555,7 @@ export default function PolaroidCard({
                 onClick={handleTitleClick}
                 data-node-id="70:80"
               >
-                {title}
+                {title || 'Add Name'}
               </p>
             )}
             
@@ -567,7 +568,8 @@ export default function PolaroidCard({
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
                 maxLength={45}
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
+                placeholder="type in your message"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '9.947px' }}
                 data-node-id="70:81"
               />
@@ -578,7 +580,7 @@ export default function PolaroidCard({
                 onClick={handleDescriptionClick}
                 data-node-id="70:81"
               >
-                {description}
+                {description || 'type in your message'}
               </p>
             )}
           </div>
@@ -654,7 +656,8 @@ export default function PolaroidCard({
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 maxLength={30}
-                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none"
+                placeholder="Add Name"
+                className="font-cursor-gothic-bold text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '16px' }}
               />
             ) : (
@@ -663,7 +666,7 @@ export default function PolaroidCard({
                 style={{ fontSize: '11px' }}
                 onClick={handleTitleClick}
               >
-                {title}
+                {title || 'Add Name'}
               </p>
             )}
             
@@ -676,7 +679,8 @@ export default function PolaroidCard({
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
                 maxLength={45}
-                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none"
+                placeholder="type in your message"
+                className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '16px' }}
               />
             ) : (
@@ -685,7 +689,7 @@ export default function PolaroidCard({
                 style={{ fontSize: '8.25px' }}
                 onClick={handleDescriptionClick}
               >
-                {description}
+                {description || 'type in your message'}
               </p>
             )}
           </div>
