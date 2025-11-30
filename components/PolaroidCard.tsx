@@ -281,56 +281,94 @@ export default function PolaroidCard({
         return
       }
 
-      // Wait for images to load
+      // Hide delete overlay during capture
+      const wasDeleteOverlayVisible = showDeleteOverlay
+      if (showDeleteOverlay) {
+        setShowDeleteOverlay(false)
+        await new Promise(resolve => setTimeout(resolve, 50))
+      }
+
+      // Wait for images to load with proper error handling
       const images = cardContent.querySelectorAll('img')
       await Promise.all(
         Array.from(images).map((img) => {
           if (img.complete) return Promise.resolve()
           return new Promise((resolve) => {
-            img.onload = resolve
-            img.onerror = resolve
-            setTimeout(resolve, 2000)
+            img.onload = () => resolve(true)
+            img.onerror = () => resolve(false)
+            // Longer timeout for images to load
+            setTimeout(() => resolve(false), 3000)
           })
         })
       )
 
-      // Store original parent transforms to restore later
+      // Store original styles to restore later
       const cardContainer = cardRef.current
       const originalTransform = cardContainer?.style.transform || ''
       const originalTransition = cardContainer?.style.transition || ''
       
-      // Temporarily remove transforms for clean capture
+      // Temporarily remove transforms and transitions for clean capture
       if (cardContainer) {
         cardContainer.style.transform = 'none'
         cardContainer.style.transition = 'none'
       }
       
-      // Wait for the transform to apply
-      await new Promise(resolve => setTimeout(resolve, 50))
+      // Wait longer for layout to stabilize (150-200ms as recommended)
+      await new Promise(resolve => setTimeout(resolve, 200))
       
-      // Capture with proper dimensions
+      // Capture with enhanced configuration
       const canvas = await html2canvas(cardContent, {
         backgroundColor: '#ffffff',
-        scale: 2, // Good quality without being too large
+        scale: 2, // High quality
         useCORS: true,
         allowTaint: true,
+        imageTimeout: 0, // No timeout for image loading
         logging: false,
         width: cardContent.offsetWidth,
         height: cardContent.offsetHeight,
+        windowWidth: cardContent.offsetWidth,
+        windowHeight: cardContent.offsetHeight,
         onclone: (clonedDoc) => {
-          // Ensure the cloned element is fully visible
+          // Clean up the cloned element for proper capture
           const clonedElement = clonedDoc.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
           if (clonedElement) {
             clonedElement.style.transform = 'none'
             clonedElement.style.position = 'relative'
+            clonedElement.style.isolation = 'isolate'
           }
+          
+          // Ensure all images in clone have proper attributes
+          const clonedImages = clonedDoc.querySelectorAll('img')
+          clonedImages.forEach((img: HTMLImageElement) => {
+            img.style.display = 'block'
+            img.style.visibility = 'visible'
+            img.style.opacity = '1'
+          })
+          
+          // Remove any delete overlays from clone
+          const deleteOverlays = clonedDoc.querySelectorAll('[data-delete-overlay]')
+          deleteOverlays.forEach(overlay => overlay.remove())
+          
+          // Ensure image frames don't have black backgrounds visible
+          const imageFrames = clonedDoc.querySelectorAll('[data-image-frame]')
+          imageFrames.forEach((frame: HTMLElement) => {
+            // Only keep black background if there's no custom image
+            if (hasCustomImage) {
+              frame.style.backgroundColor = 'transparent'
+            }
+          })
         }
       })
       
-      // Restore original transforms
+      // Restore original styles
       if (cardContainer) {
         cardContainer.style.transform = originalTransform
         cardContainer.style.transition = originalTransition
+      }
+      
+      // Restore delete overlay state
+      if (wasDeleteOverlayVisible) {
+        setShowDeleteOverlay(true)
       }
 
       // Convert canvas to blob
@@ -456,6 +494,7 @@ export default function PolaroidCard({
                   src={shareIcon}
                   alt="Share"
                   className="block w-[11.179px] h-[11.178px]"
+                  crossOrigin="anonymous"
                 />
               </div>
             </div>
@@ -476,7 +515,10 @@ export default function PolaroidCard({
             className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
               isDragging ? 'border-blue-300 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
             }`}
-            style={{ borderWidth: isDragging ? '2.2px' : '0.829px' }}
+            style={{ 
+              borderWidth: isDragging ? '2.2px' : '0.829px',
+              isolation: 'isolate'
+            }}
             data-name="Polaroid Card - Backpane (White)"
             data-node-id="70:76"
           >
@@ -495,6 +537,7 @@ export default function PolaroidCard({
               src={imageUrl}
               alt="Polaroid"
               className="block w-full h-full object-cover"
+              crossOrigin="anonymous"
             />
             
             {/* Delete Overlay - Shows when user clicks on image */}
@@ -593,7 +636,10 @@ export default function PolaroidCard({
           className={`bg-white overflow-clip rounded-[2.4px] w-full h-full border transition-all duration-150 ${
             isDragging ? 'border-blue-300 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
           }`}
-          style={{ borderWidth: isDragging ? '1.8px' : '0.68px' }}
+          style={{ 
+            borderWidth: isDragging ? '1.8px' : '0.68px',
+            isolation: 'isolate'
+          }}
           data-name="Polaroid Card - Backpane (White)"
         >
           {/* Image Frame */}
@@ -610,6 +656,7 @@ export default function PolaroidCard({
               src={imageUrl}
               alt="Polaroid"
               className="block w-full h-full object-cover"
+              crossOrigin="anonymous"
             />
             
             {/* Delete Overlay - Shows when user clicks on image */}
