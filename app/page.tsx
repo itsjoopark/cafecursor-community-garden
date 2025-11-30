@@ -220,7 +220,7 @@ export default function Home() {
     const newStamp: Stamp = {
       id: `stamp-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       position: { x: worldX, y: worldY },
-      emoji: '↥'
+      emoji: '😊'
     }
     
     setStamps(prev => [...prev, newStamp])
@@ -759,7 +759,7 @@ export default function Home() {
           aria-label="Stamp tool"
           title={isStampMode ? "Stamp mode active - Click to disable" : "Click to enable stamp tool"}
         >
-          ↥
+          😊
         </button>
       </div>
 
