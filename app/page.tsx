@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
-import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards } from '@/lib/supabase'
+import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards, subscribeToDragging, broadcastDragging } from '@/lib/supabase'
 
 interface Card {
   id: string
@@ -28,6 +28,13 @@ export default function Home() {
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
+  const lastBroadcastTime = useRef<number>(0)
+  
+  // Generate a unique user ID for this session
+  const userId = useRef<string>('')
+  if (!userId.current) {
+    userId.current = `user-${Date.now()}-${Math.random().toString(36).substring(7)}`
+  }
 
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
@@ -125,7 +132,14 @@ export default function Home() {
       card.id === cardId ? { ...card, position: newPosition } : card
     ))
     
-    // Update in database
+    // Broadcast position in real-time while dragging (throttled to 50ms)
+    const now = Date.now()
+    if (now - lastBroadcastTime.current > 50) {
+      broadcastDragging(cardId, newPosition, userId.current)
+      lastBroadcastTime.current = now
+    }
+    
+    // Update in database (this will also trigger real-time sync for other users)
     await updateCard(cardId, {
       position_x: newPosition.x,
       position_y: newPosition.y
@@ -463,8 +477,23 @@ export default function Home() {
       }
     )
 
+    // Subscribe to real-time dragging (see positions update while others drag)
+    const unsubscribeDragging = subscribeToDragging((data) => {
+      // Only update if it's not the current user dragging
+      if (data.userId !== userId.current) {
+        setCards(prevCards =>
+          prevCards.map(card =>
+            card.id === data.cardId
+              ? { ...card, position: data.position }
+              : card
+          )
+        )
+      }
+    })
+
     return () => {
       unsubscribe()
+      unsubscribeDragging()
     }
   }, [])
 
@@ -569,6 +598,9 @@ export default function Home() {
                 top: `${card.position.y}px`,
                 transform: 'translate(-50%, -50%)',
                 pointerEvents: 'auto',
+                // Smooth transition for position changes from other users
+                // Disable transition when this card is being dragged by current user
+                transition: draggingCardId === card.id ? 'none' : 'left 0.3s ease-out, top 0.3s ease-out',
               }}
               onMouseDown={(e) => {
                 // Stop propagation to prevent canvas panning when clicking cards (desktop)
