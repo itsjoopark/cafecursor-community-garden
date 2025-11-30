@@ -2,6 +2,8 @@
 
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
+import html2canvas from 'html2canvas'
+import { supabase } from '@/lib/supabase'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
 const shareIcon = "/assets/90b8f138c6f3c265f6eabac618542b6a23368454.svg"
@@ -19,13 +21,14 @@ interface PolaroidCardProps {
   isSelected?: boolean
   onDragStart?: () => void
   onDragEnd?: () => void
+  onDelete?: () => void
 }
 
 export default function PolaroidCard({ 
   initialPosition = { x: 0, y: 0 }, 
   onPositionChange,
-  initialTitle = 'Add Name',
-  initialDescription = 'type a message',
+  initialTitle = '',
+  initialDescription = '',
   initialImageUrl = defaultImageFrame,
   initialDateStamp = '',
   onTitleChange,
@@ -33,7 +36,8 @@ export default function PolaroidCard({
   onImageChange,
   isSelected = false,
   onDragStart,
-  onDragEnd
+  onDragEnd,
+  onDelete
 }: PolaroidCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -45,17 +49,20 @@ export default function PolaroidCard({
   const [imageUrl, setImageUrl] = useState(initialImageUrl)
   const [dateStamp, setDateStamp] = useState(initialDateStamp)
   const cardRef = useRef<HTMLDivElement>(null)
+  const cardContentRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isSharing, setIsSharing] = useState(false)
+  const [showDeleteOverlay, setShowDeleteOverlay] = useState(false)
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Don't start drag if clicking on input fields or image
+    // Don't start drag if clicking on input fields, image, or delete overlay
     const target = e.target as HTMLElement
-    if (target.tagName === 'INPUT' || target.closest('[data-image-frame]')) {
+    if (target.tagName === 'INPUT' || target.closest('[data-image-frame]') || target.closest('[data-delete-overlay]')) {
       return
     }
 
@@ -196,11 +203,30 @@ export default function PolaroidCard({
   }
 
   const handleImageClick = () => {
-    // Prevent changing image if a custom image has already been uploaded
+    // If image has been uploaded, show delete overlay instead
     if (hasCustomImage) {
+      setShowDeleteOverlay(true)
       return
     }
+    // Otherwise, allow image upload
     fileInputRef.current?.click()
+  }
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (window.confirm('Are you sure you want to delete this card?')) {
+      onDelete?.()
+    }
+    setShowDeleteOverlay(false)
+  }
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    // Clicking on overlay (not the delete text) closes it
+    const target = e.target as HTMLElement
+    if (!target.closest('[data-delete-text]')) {
+      setShowDeleteOverlay(false)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,27 +255,128 @@ export default function PolaroidCard({
   }
 
   const handleShare = async () => {
-    // Use Web Share API if available, otherwise copy URL
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: title,
-          text: `Check out my Polaroid from Cafe Cursor Toronto: ${description}`,
-          url: window.location.href,
+    if (!cardContentRef.current) return
+    
+    setIsSharing(true)
+    
+    try {
+      // Find the Polaroid card content element
+      const cardContent = cardContentRef.current.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
+      
+      if (!cardContent) {
+        console.error('Card content not found')
+        setIsSharing(false)
+        return
+      }
+
+      // Wait for images to load
+      const images = cardContent.querySelectorAll('img')
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve()
+          return new Promise((resolve) => {
+            img.onload = resolve
+            img.onerror = resolve
+            setTimeout(resolve, 2000)
+          })
         })
-      } catch (err) {
-        // User cancelled or share failed
-        console.log('Share cancelled or failed')
+      )
+
+      // Store original parent transforms to restore later
+      const cardContainer = cardRef.current
+      const originalTransform = cardContainer?.style.transform || ''
+      const originalTransition = cardContainer?.style.transition || ''
+      
+      // Temporarily remove transforms for clean capture
+      if (cardContainer) {
+        cardContainer.style.transform = 'none'
+        cardContainer.style.transition = 'none'
       }
-    } else {
-      // Fallback: Copy current URL to clipboard
+      
+      // Wait for the transform to apply
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      // Capture with proper dimensions
+      const canvas = await html2canvas(cardContent, {
+        backgroundColor: '#ffffff',
+        scale: 2, // Good quality without being too large
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        width: cardContent.offsetWidth,
+        height: cardContent.offsetHeight,
+        onclone: (clonedDoc) => {
+          // Ensure the cloned element is fully visible
+          const clonedElement = clonedDoc.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
+          if (clonedElement) {
+            clonedElement.style.transform = 'none'
+            clonedElement.style.position = 'relative'
+          }
+        }
+      })
+      
+      // Restore original transforms
+      if (cardContainer) {
+        cardContainer.style.transform = originalTransform
+        cardContainer.style.transition = originalTransition
+      }
+
+      // Convert canvas to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!)
+        }, 'image/png', 1.0)
+      })
+
+      // Upload to Supabase Storage (CDN)
+      const fileName = `shared/polaroid-${Date.now()}-${Math.random().toString(36).substring(7)}.png`
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('polaroid-images')
+        .upload(fileName, blob, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/png'
+        })
+
+      if (uploadError) {
+        console.error('Error uploading to CDN:', uploadError)
+        // Fallback: Download the image locally
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `cafe-cursor-polaroid-${Date.now()}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+        alert('Image downloaded! Upload failed, but you can share the downloaded file.')
+        setIsSharing(false)
+        return
+      }
+
+      // Get public URL from CDN
+      const { data: { publicUrl } } = supabase.storage
+        .from('polaroid-images')
+        .getPublicUrl(uploadData.path)
+
+      // Open image in new tab
+      window.open(publicUrl, '_blank')
+      
+      // Also try to copy the URL to clipboard
       try {
-        await navigator.clipboard.writeText(window.location.href)
-        alert('Link copied to clipboard!')
-      } catch (err) {
-        console.error('Failed to copy:', err)
+        await navigator.clipboard.writeText(publicUrl)
+        alert('Image opened in new tab! URL copied to clipboard - you can paste it to share on Twitter, email, etc.')
+      } catch (clipboardError) {
+        alert('Image opened in new tab! Right-click to copy the image or URL to share.')
       }
+      
+    } catch (error) {
+      console.error('Error sharing:', error)
+      alert('Failed to share. Please try again.')
     }
+    
+    setIsSharing(false)
   }
 
   useEffect(() => {
@@ -303,42 +430,48 @@ export default function PolaroidCard({
               e.stopPropagation()
               handleShare()
             }}
-            className="border border-[#f54e00] border-solid box-border flex gap-[10px] items-center justify-center px-[10px] py-[5px] rounded-[10px] bg-white hover:bg-[#fff5f0] transition-colors shadow-md"
+            disabled={isSharing}
+            className="bg-[#d9d9d9] box-border flex gap-[5px] items-center px-[10px] py-[5px] rounded-[10px] hover:bg-[#c5c5c5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+            }}
             data-name="Button_Share"
-            data-node-id="77:426"
+            data-node-id="77:491"
           >
-            <div className="flex gap-[5px] items-center">
-              <div className="flex items-center justify-center w-[15.614px] h-[15.614px]">
-                <div className="transform rotate-[54deg]">
-                  <img 
-                    src={shareIcon}
-                    alt="Share"
-                    className="block w-[11.179px] h-[11.178px]"
-                  />
-                </div>
+            <div className="flex items-center justify-center shrink-0 w-[15.614px] h-[15.614px]">
+              <div className="transform rotate-[54deg]">
+                <img 
+                  src={shareIcon}
+                  alt="Share"
+                  className="block w-[11.179px] h-[11.178px]"
+                />
               </div>
-              <p className="font-['Cursor_Gothic:Regular',sans-serif] text-[#f54e00] text-[15px] leading-normal">
-                Share
+            </div>
+            <div className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] h-[22px] justify-end leading-[0] shrink-0 text-[#14120b] text-[15px] w-[41px]">
+              <p className="leading-normal">
+                {isSharing ? 'Sharing...' : 'Share'}
               </p>
             </div>
           </button>
         </div>
       )}
 
-      {/* Desktop Layout */}
-      <div className="hidden md:block relative w-full h-full">
-        <div 
-          className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
-            isDragging ? 'border-blue-300 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
-          }`}
-          style={{ borderWidth: isDragging ? '2.2px' : '0.829px' }}
-          data-name="Polaroid Card - Backpane (White)"
-          data-node-id="70:76"
-        >
+      {/* Card Content Container */}
+      <div ref={cardContentRef} className="w-full h-full">
+        {/* Desktop Layout */}
+        <div className="hidden md:block relative w-full h-full">
+          <div 
+            className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
+              isDragging ? 'border-blue-300 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
+            }`}
+            style={{ borderWidth: isDragging ? '2.2px' : '0.829px' }}
+            data-name="Polaroid Card - Backpane (White)"
+            data-node-id="70:76"
+          >
           {/* Image Frame */}
           <div 
             className={`absolute left-1/2 transform -translate-x-1/2 w-[248.673px] h-[248.673px] top-[14.92px] transition-opacity bg-[#14120b] overflow-hidden ${
-              hasCustomImage ? 'cursor-default' : 'cursor-pointer hover:opacity-90'
+              hasCustomImage ? 'cursor-pointer' : 'cursor-pointer hover:opacity-90'
             }`}
             data-name="Image Frame"
             data-node-id="70:97"
@@ -350,6 +483,23 @@ export default function PolaroidCard({
               alt="Polaroid"
               className="block w-full h-full object-cover"
             />
+            
+            {/* Delete Overlay - Shows when user clicks on image */}
+            {showDeleteOverlay && hasCustomImage && (
+              <div 
+                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
+                data-delete-overlay
+                onClick={handleOverlayClick}
+              >
+                <div 
+                  className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
+                  data-delete-text
+                  onClick={handleDeleteClick}
+                >
+                  <p className="leading-normal whitespace-pre">Delete?</p>
+                </div>
+              </div>
+            )}
             
             {/* Date Stamp - Only shows when custom image is uploaded */}
             {hasCustomImage && dateStamp && (
@@ -432,7 +582,7 @@ export default function PolaroidCard({
           {/* Image Frame */}
           <div 
             className={`absolute left-1/2 transform -translate-x-1/2 w-[calc(100%-26px)] aspect-square top-[12px] transition-opacity bg-[#14120b] overflow-hidden ${
-              hasCustomImage ? 'cursor-default' : 'cursor-pointer hover:opacity-90'
+              hasCustomImage ? 'cursor-pointer' : 'cursor-pointer hover:opacity-90'
             }`}
             data-name="Image Frame"
             data-image-frame
@@ -443,6 +593,23 @@ export default function PolaroidCard({
               alt="Polaroid"
               className="block w-full h-full object-cover"
             />
+            
+            {/* Delete Overlay - Shows when user clicks on image */}
+            {showDeleteOverlay && hasCustomImage && (
+              <div 
+                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
+                data-delete-overlay
+                onClick={handleOverlayClick}
+              >
+                <div 
+                  className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
+                  data-delete-text
+                  onClick={handleDeleteClick}
+                >
+                  <p className="leading-normal whitespace-pre">Delete?</p>
+                </div>
+              </div>
+            )}
             
             {/* Date Stamp - Only shows when custom image is uploaded */}
             {hasCustomImage && dateStamp && (
@@ -505,6 +672,7 @@ export default function PolaroidCard({
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Hidden File Input */}

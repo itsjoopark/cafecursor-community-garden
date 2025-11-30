@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
-import { uploadImage, saveCard, updateCard, getAllCards, subscribeToCards } from '@/lib/supabase'
+import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards } from '@/lib/supabase'
 
 interface Card {
   id: string
@@ -83,8 +83,8 @@ export default function Home() {
             x: worldX,
             y: worldY
           },
-          title: 'Add Name',
-          description: 'type a message',
+          title: '',
+          description: '',
           imageUrl: imageUrl,
           dateStamp: dateStamp
         }
@@ -157,6 +157,14 @@ export default function Home() {
     
     // Update in database
     await updateCard(cardId, { image_url: newImageUrl })
+  }
+
+  const handleCardDelete = async (cardId: string) => {
+    // Remove from local state immediately for better UX
+    setCards(cards.filter(card => card.id !== cardId))
+    
+    // Delete from database
+    await deleteCard(cardId)
   }
 
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -549,6 +557,7 @@ export default function Home() {
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
+                onDelete={() => handleCardDelete(card.id)}
                 isSelected={draggingCardId === card.id}
                 onDragStart={() => setDraggingCardId(card.id)}
                 onDragEnd={() => setDraggingCardId(null)}
