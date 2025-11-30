@@ -654,7 +654,7 @@ export default function Home() {
           aria-label="Save canvas"
           title="Save canvas"
         >
-          ⤓
+          ☕
         </button>
       </div>
 
