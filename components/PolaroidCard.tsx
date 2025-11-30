@@ -220,13 +220,13 @@ export default function PolaroidCard({
         clearTimeout(hideOverlayTimeoutRef.current)
         hideOverlayTimeoutRef.current = null
       }
-      // Start 3-second auto-hide timer
+      // Start 2-second auto-hide timer
       hideOverlayTimeoutRef.current = setTimeout(() => {
         if (!isEditingOverlayText) {
           setShowEditOverlay(false)
         }
         hideOverlayTimeoutRef.current = null
-      }, 3000)
+      }, 2000)
       return
     }
     // Otherwise, allow image upload
@@ -243,13 +243,13 @@ export default function PolaroidCard({
         clearTimeout(hideOverlayTimeoutRef.current)
         hideOverlayTimeoutRef.current = null
       }
-      // Start 3-second auto-hide timer
+      // Start 2-second auto-hide timer
       hideOverlayTimeoutRef.current = setTimeout(() => {
         if (!isEditingOverlayText) {
           setShowEditOverlay(false)
         }
         hideOverlayTimeoutRef.current = null
-      }, 3000)
+      }, 2000)
       return
     }
     // Otherwise, allow image upload
@@ -283,7 +283,7 @@ export default function PolaroidCard({
     hideOverlayTimeoutRef.current = setTimeout(() => {
       setShowEditOverlay(false)
       hideOverlayTimeoutRef.current = null
-    }, 3000)
+    }, 2000)
   }
 
   const handleOverlayBackgroundClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -447,8 +447,8 @@ export default function PolaroidCard({
                 onClick={handleOverlayBackgroundClick}
                 onTouchEnd={handleOverlayBackgroundClick}
               >
-                {!isEditingOverlayText ? (
-                  // Show pencil icon when not editing
+                {!isEditingOverlayText && !overlayText ? (
+                  // Show pencil icon when not editing and no text exists
                   <div 
                     className="flex flex-col items-center justify-center"
                     onClick={handleEditOverlayClick}
@@ -458,7 +458,7 @@ export default function PolaroidCard({
                       <path d="M11.0531 3.94689L16.0531 8.94689M13.5 1.5C14.0304 0.969716 14.7548 0.671875 15.5106 0.671875C16.2664 0.671875 16.9909 0.969716 17.5213 1.5C18.0516 2.03028 18.3494 2.75476 18.3494 3.51061C18.3494 4.26647 18.0516 4.99095 17.5213 5.52123L4.18085 18.8617L0 20L1.13829 15.8191L14.4788 2.47873C14.744 2.21343 15.0591 2.00283 15.4059 1.85858C15.7527 1.71434 16.1245 1.63916 16.5 1.63916C16.8755 1.63916 17.2473 1.71434 17.5941 1.85858C17.9409 2.00283 18.256 2.21343 18.5213 2.47873L13.5 1.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                ) : (
+                ) : isEditingOverlayText ? (
                   // Show textarea when editing
                   <textarea
                     ref={overlayTextRef}
@@ -471,7 +471,7 @@ export default function PolaroidCard({
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                   />
-                )}
+                ) : null}
                 
                 {/* Display saved overlay text when not editing and text exists */}
                 {!isEditingOverlayText && overlayText && (
@@ -595,8 +595,8 @@ export default function PolaroidCard({
                 onClick={handleOverlayBackgroundClick}
                 onTouchEnd={handleOverlayBackgroundClick}
               >
-                {!isEditingOverlayText ? (
-                  // Show pencil icon when not editing
+                {!isEditingOverlayText && !overlayText ? (
+                  // Show pencil icon when not editing and no text exists
                   <div 
                     className="flex flex-col items-center justify-center"
                     onClick={handleEditOverlayClick}
@@ -606,7 +606,7 @@ export default function PolaroidCard({
                       <path d="M11.0531 3.94689L16.0531 8.94689M13.5 1.5C14.0304 0.969716 14.7548 0.671875 15.5106 0.671875C16.2664 0.671875 16.9909 0.969716 17.5213 1.5C18.0516 2.03028 18.3494 2.75476 18.3494 3.51061C18.3494 4.26647 18.0516 4.99095 17.5213 5.52123L4.18085 18.8617L0 20L1.13829 15.8191L14.4788 2.47873C14.744 2.21343 15.0591 2.00283 15.4059 1.85858C15.7527 1.71434 16.1245 1.63916 16.5 1.63916C16.8755 1.63916 17.2473 1.71434 17.5941 1.85858C17.9409 2.00283 18.256 2.21343 18.5213 2.47873L13.5 1.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                ) : (
+                ) : isEditingOverlayText ? (
                   // Show textarea when editing
                   <textarea
                     ref={overlayTextRef}
@@ -619,7 +619,7 @@ export default function PolaroidCard({
                     onClick={(e) => e.stopPropagation()}
                     onTouchEnd={(e) => e.stopPropagation()}
                   />
-                )}
+                ) : null}
                 
                 {/* Display saved overlay text when not editing and text exists */}
                 {!isEditingOverlayText && overlayText && (
