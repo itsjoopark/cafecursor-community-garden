@@ -15,6 +15,13 @@ const config: Config = {
       animation: {
         wiggle: 'wiggle 0.5s ease-in-out',
       },
+      keyframes: {
+        wiggle: {
+          '0%, 100%': { transform: 'rotate(0deg)' },
+          '25%': { transform: 'rotate(-1deg)' },
+          '75%': { transform: 'rotate(1deg)' },
+        },
+      },
       fontFamily: {
         'cursor-gothic-bold': ['Cursor Gothic Bold', 'sans-serif'],
       },

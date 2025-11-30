@@ -409,11 +409,11 @@ export default function PolaroidCard({
       {/* Card Content Container */}
       <div ref={cardContentRef} className="w-full h-full">
         {/* Desktop Layout */}
-        <div className="hidden md:block relative w-full h-full">
+        <div className="hidden md:block relative w-full h-full group">
           <div 
             className={`bg-white overflow-clip rounded-[2.899px] w-[281px] h-[333.221px] border transition-all duration-150 ${
               isDragging ? 'border-blue-300 shadow-2xl' : 'border-[#d9d9d9] shadow-lg'
-            }`}
+            } ${!isDragging ? 'group-hover:animate-wiggle' : ''}`}
             style={{ 
               borderWidth: isDragging ? '2.2px' : '0.829px',
               isolation: 'isolate'
