@@ -31,7 +31,7 @@ export default function StickyNoteToolbar({ onColorSelect, onCameraClick }: Stic
         e.preventDefault()
         handleCameraClick()
       }}
-      className={`border border-[#bfbfbf] border-solid box-border flex items-center justify-center p-[10px] rounded-[10px] bg-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
+      className={`border border-[#bfbfbf] border-solid box-border flex items-center justify-center w-12 h-12 rounded-[10px] bg-white transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer ${
         isPressed ? 'scale-95' : ''
       }`}
       style={{ 
