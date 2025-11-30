@@ -53,6 +53,7 @@ export default function PolaroidCard({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showDeleteOverlay, setShowDeleteOverlay] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const hideButtonTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
@@ -294,6 +295,15 @@ export default function PolaroidCard({
     }
   }, [dragStart, dragOffset, isDragging, initialPosition, onPositionChange])
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hideButtonTimeoutRef.current) {
+        clearTimeout(hideButtonTimeoutRef.current)
+      }
+    }
+  }, [])
+
   return (
     <div 
       ref={cardRef}
@@ -306,8 +316,27 @@ export default function PolaroidCard({
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      onMouseEnter={() => !isDragging && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        if (!isDragging) {
+          // Clear any pending hide timeout
+          if (hideButtonTimeoutRef.current) {
+            clearTimeout(hideButtonTimeoutRef.current)
+            hideButtonTimeoutRef.current = null
+          }
+          setIsHovered(true)
+        }
+      }}
+      onMouseLeave={() => {
+        // Clear any existing timeout
+        if (hideButtonTimeoutRef.current) {
+          clearTimeout(hideButtonTimeoutRef.current)
+        }
+        // Set new timeout to hide after 5 seconds
+        hideButtonTimeoutRef.current = setTimeout(() => {
+          setIsHovered(false)
+          hideButtonTimeoutRef.current = null
+        }, 5000)
+      }}
     >
       {/* Card Content Container */}
       <div ref={cardContentRef} className="w-full h-full">
@@ -569,10 +598,33 @@ export default function PolaroidCard({
             transition: 'opacity 0.3s ease, transform 0.3s ease',
             pointerEvents: isHovered ? 'auto' : 'none',
           }}
+          onMouseEnter={() => {
+            // Keep button visible when hovering over it
+            if (hideButtonTimeoutRef.current) {
+              clearTimeout(hideButtonTimeoutRef.current)
+              hideButtonTimeoutRef.current = null
+            }
+            setIsHovered(true)
+          }}
+          onMouseLeave={() => {
+            // Start hide countdown when leaving button
+            if (hideButtonTimeoutRef.current) {
+              clearTimeout(hideButtonTimeoutRef.current)
+            }
+            hideButtonTimeoutRef.current = setTimeout(() => {
+              setIsHovered(false)
+              hideButtonTimeoutRef.current = null
+            }, 5000)
+          }}
         >
           <button
             onClick={(e) => {
               e.stopPropagation()
+              // Clear timeout immediately on click
+              if (hideButtonTimeoutRef.current) {
+                clearTimeout(hideButtonTimeoutRef.current)
+                hideButtonTimeoutRef.current = null
+              }
               if (window.confirm('Delete this polaroid card?')) {
                 onDelete?.()
               }
