@@ -15,8 +15,15 @@ interface Card {
   dateStamp?: string
 }
 
+interface Stamp {
+  id: string
+  position: { x: number; y: number }
+  emoji: string
+}
+
 export default function Home() {
   const [cards, setCards] = useState<Card[]>([])
+  const [stamps, setStamps] = useState<Stamp[]>([])
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null)
   const [canvasOffset, setCanvasOffset] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
@@ -25,10 +32,13 @@ export default function Home() {
   const [lastTouchDistance, setLastTouchDistance] = useState<number | null>(null)
   const [isPinching, setIsPinching] = useState(false)
   const [isSpacebarHeld, setIsSpacebarHeld] = useState(false)
+  const [isStampMode, setIsStampMode] = useState(false)
+  const [isStamping, setIsStamping] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
   const lastBroadcastTime = useRef<number>(0)
+  const lastStampPosition = useRef<{ x: number; y: number } | null>(null)
   
   // Generate a unique user ID for this session
   const userId = useRef<string>('')
@@ -181,7 +191,41 @@ export default function Home() {
     await deleteCard(cardId)
   }
 
+  const placeStamp = (clientX: number, clientY: number) => {
+    if (!canvasRef.current) return
+    
+    // Convert screen coordinates to world coordinates
+    const worldX = (clientX - canvasOffset.x) / zoom
+    const worldY = (clientY - canvasOffset.y) / zoom
+    
+    // Check if we're too close to the last stamp (prevents overlapping stamps when dragging)
+    if (lastStampPosition.current) {
+      const distance = Math.sqrt(
+        Math.pow(worldX - lastStampPosition.current.x, 2) + 
+        Math.pow(worldY - lastStampPosition.current.y, 2)
+      )
+      if (distance < 30) return // Minimum distance between stamps
+    }
+    
+    const newStamp: Stamp = {
+      id: `stamp-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+      position: { x: worldX, y: worldY },
+      emoji: '☕'
+    }
+    
+    setStamps(prev => [...prev, newStamp])
+    lastStampPosition.current = { x: worldX, y: worldY }
+  }
+
   const handleCanvasMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // If in stamp mode, place a stamp
+    if (isStampMode) {
+      setIsStamping(true)
+      placeStamp(e.clientX, e.clientY)
+      e.preventDefault()
+      return
+    }
+    
     // Only handle clicks that are directly on the canvas/background
     // Clicks on cards will be stopped at the card level
     setIsPanning(true)
@@ -195,6 +239,15 @@ export default function Home() {
   const handleCanvasTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     // Only handle touch events that are directly on the canvas/background
     // Touch events on cards will be stopped at the card level
+    
+    // If in stamp mode and single touch, place stamp
+    if (isStampMode && e.touches.length === 1) {
+      const touch = e.touches[0]
+      setIsStamping(true)
+      placeStamp(touch.clientX, touch.clientY)
+      return
+    }
+    
     if (e.touches.length === 2) {
       // Two finger pinch - initialize pinch-to-zoom
       setIsPinching(true)
@@ -214,6 +267,12 @@ export default function Home() {
   }
 
   const handleMouseMove = (e: MouseEvent) => {
+    // If stamping while dragging, place stamps
+    if (isStamping) {
+      placeStamp(e.clientX, e.clientY)
+      return
+    }
+    
     if (isPanning) {
       setCanvasOffset({
         x: e.clientX - panStart.x,
@@ -236,6 +295,14 @@ export default function Home() {
   }
 
   const handleTouchMove = (e: TouchEvent) => {
+    // If stamping while dragging, place stamps
+    if (isStamping && e.touches.length === 1) {
+      const touch = e.touches[0]
+      placeStamp(touch.clientX, touch.clientY)
+      e.preventDefault()
+      return
+    }
+    
     if (e.touches.length === 2) {
       // Pinch to zoom
       e.preventDefault()
@@ -287,10 +354,14 @@ export default function Home() {
 
   const handleMouseUp = () => {
     setIsPanning(false)
+    setIsStamping(false)
+    lastStampPosition.current = null
   }
 
   const handleTouchEnd = () => {
     setIsPanning(false)
+    setIsStamping(false)
+    lastStampPosition.current = null
     setIsPinching(false)
     setLastTouchDistance(null)
   }
@@ -545,7 +616,7 @@ export default function Home() {
         className="absolute inset-0 z-0"
         style={{ 
           touchAction: 'none',
-          cursor: isSpacebarHeld ? (isPanning ? 'grabbing' : 'grab') : 'default'
+          cursor: isStampMode ? 'crosshair' : (isSpacebarHeld ? (isPanning ? 'grabbing' : 'grab') : 'default')
         }}
         onMouseDown={(e) => {
           if (isSpacebarHeld) {
@@ -563,7 +634,7 @@ export default function Home() {
             backgroundColor: '#F0EFEA',
             width: '100%',
             height: '100%',
-            cursor: isPanning ? 'grabbing' : 'grab',
+            cursor: isStampMode ? 'crosshair' : (isPanning ? 'grabbing' : 'grab'),
           }}
         />
         
@@ -574,7 +645,7 @@ export default function Home() {
             backgroundImage: `radial-gradient(circle, rgba(20, 18, 11, ${Math.max(0.08, Math.min(0.35, zoom * 0.35))}) 2px, transparent 2px)`,
             backgroundSize: `${100 * zoom}px ${100 * zoom}px`,
             backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
-            cursor: (isPanning || isSpacebarHeld) ? (isPanning ? 'grabbing' : 'grab') : 'default',
+            cursor: isStampMode ? 'crosshair' : (isPanning || isSpacebarHeld) ? (isPanning ? 'grabbing' : 'grab') : 'default',
           }}
         />
         
@@ -628,6 +699,23 @@ export default function Home() {
             </div>
           ))}
 
+          {/* Render all stamps at their world positions */}
+          {stamps.map((stamp) => (
+            <div
+              key={stamp.id}
+              className="absolute pointer-events-none select-none"
+              style={{
+                left: `${stamp.position.x}px`,
+                top: `${stamp.position.y}px`,
+                transform: 'translate(-50%, -50%)',
+                fontSize: '24px',
+                lineHeight: 1,
+              }}
+            >
+              {stamp.emoji}
+            </div>
+          ))}
+
           {/* Instructions when no cards - centered in viewport */}
           {cards.length === 0 && (
             <div 
@@ -646,13 +734,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Save Canvas Button - Fixed at bottom left */}
+      {/* Stamp Tool Button - Fixed at bottom left */}
       <div className="fixed bottom-[50px] left-[20px] md:left-[50px] z-30">
         <button
-          onClick={() => alert('Save Canvas feature - Coming soon!')}
-          className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] font-['Cursor_Gothic:Regular',sans-serif] text-[21px] hover:bg-white/80 transition-colors shadow-lg"
-          aria-label="Save canvas"
-          title="Save canvas"
+          onClick={() => setIsStampMode(!isStampMode)}
+          className={`backdrop-blur-sm border rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] font-['Cursor_Gothic:Regular',sans-serif] text-[21px] hover:bg-white/80 transition-colors shadow-lg ${
+            isStampMode ? 'bg-blue-200/80 border-blue-400' : 'bg-white/60 border-gray-300'
+          }`}
+          aria-label="Stamp tool"
+          title={isStampMode ? "Stamp mode active - Click to disable" : "Click to enable stamp tool"}
         >
           ☕
         </button>
