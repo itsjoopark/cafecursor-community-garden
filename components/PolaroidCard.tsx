@@ -629,17 +629,17 @@ export default function PolaroidCard({
                 onDelete?.()
               }
             }}
-            className="bg-[#d9d9d9] box-border flex flex-col gap-[10px] items-center px-[10px] py-[5px] rounded-[16px] hover:bg-[#c5c5c5] transition-colors"
+            className="w-10 h-10 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-colors border border-gray-200"
             style={{
-              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+              boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.15)',
             }}
             data-name="Button_Delete"
             data-node-id="80:650"
             aria-label="Delete card"
           >
-            <p className="font-['Cursor_Gothic:Regular',sans-serif] leading-normal text-[15px] text-black text-center whitespace-pre">
-              ❌
-            </p>
+            <span className="text-[#52525b] text-[20px] font-bold leading-none">
+              ×
+            </span>
           </button>
         </div>
       )}
