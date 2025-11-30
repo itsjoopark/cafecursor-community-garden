@@ -127,19 +127,29 @@ export default function Home() {
     e.target.value = ''
   }
 
-  const handleCardPositionChange = async (cardId: string, newPosition: { x: number; y: number }) => {
+  // Called continuously during drag - only broadcasts, no database update
+  const handleCardDragMove = (cardId: string, newPosition: { x: number; y: number }) => {
+    // Update local state immediately for smooth dragging
     setCards(cards.map(card => 
       card.id === cardId ? { ...card, position: newPosition } : card
     ))
     
-    // Broadcast position in real-time while dragging (throttled to 50ms)
+    // Broadcast position in real-time while dragging (throttled to 50ms for performance)
     const now = Date.now()
     if (now - lastBroadcastTime.current > 50) {
       broadcastDragging(cardId, newPosition, userId.current)
       lastBroadcastTime.current = now
     }
+  }
+
+  // Called at end of drag - saves final position to database
+  const handleCardPositionChange = async (cardId: string, newPosition: { x: number; y: number }) => {
+    // Update local state
+    setCards(cards.map(card => 
+      card.id === cardId ? { ...card, position: newPosition } : card
+    ))
     
-    // Update in database (this will also trigger real-time sync for other users)
+    // Save final position to database (triggers real-time sync for persistence)
     await updateCard(cardId, {
       position_x: newPosition.x,
       position_y: newPosition.y
@@ -601,6 +611,10 @@ export default function Home() {
                 // Smooth transition for position changes from other users
                 // Disable transition when this card is being dragged by current user
                 transition: draggingCardId === card.id ? 'none' : 'left 0.3s ease-out, top 0.3s ease-out',
+                // Optimize for mobile performance
+                willChange: draggingCardId === card.id ? 'auto' : 'left, top',
+                // Enable hardware acceleration for smoother animations on mobile
+                WebkitTransform: 'translate(-50%, -50%) translateZ(0)',
               }}
               onMouseDown={(e) => {
                 // Stop propagation to prevent canvas panning when clicking cards (desktop)
@@ -613,6 +627,7 @@ export default function Home() {
             >
               <PolaroidCard 
                 initialPosition={card.position}
+                onDragMove={(newPos) => handleCardDragMove(card.id, newPos)}
                 onPositionChange={(newPos) => handleCardPositionChange(card.id, newPos)}
                 initialTitle={card.title}
                 initialDescription={card.description}

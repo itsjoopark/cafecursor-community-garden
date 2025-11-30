@@ -9,6 +9,7 @@ const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
 interface PolaroidCardProps {
   initialPosition?: { x: number; y: number }
   onPositionChange?: (position: { x: number; y: number }) => void
+  onDragMove?: (position: { x: number; y: number }) => void
   initialTitle?: string
   initialDescription?: string
   initialImageUrl?: string
@@ -25,6 +26,7 @@ interface PolaroidCardProps {
 export default function PolaroidCard({ 
   initialPosition = { x: 0, y: 0 }, 
   onPositionChange,
+  onDragMove,
   initialTitle = '',
   initialDescription = '',
   initialImageUrl = defaultImageFrame,
@@ -97,6 +99,14 @@ export default function PolaroidCard({
           setIsDragging(true)
           onDragStart?.() // Notify parent that drag started
         }
+        
+        // Continuously update position during drag for smooth real-time updates
+        if (onDragMove) {
+          onDragMove({
+            x: initialPosition.x + deltaX,
+            y: initialPosition.y + deltaY,
+          })
+        }
       }
       
       setDragOffset({
@@ -117,6 +127,15 @@ export default function PolaroidCard({
           setIsDragging(true)
           onDragStart?.() // Notify parent that drag started
         }
+        
+        // Continuously update position during drag for smooth real-time updates on mobile
+        if (onDragMove) {
+          onDragMove({
+            x: initialPosition.x + deltaX,
+            y: initialPosition.y + deltaY,
+          })
+        }
+        
         e.preventDefault()
       }
       
