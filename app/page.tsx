@@ -524,9 +524,8 @@ export default function Home() {
           data-node-id="72:154"
         >
           <h1 
-            className="italic leading-normal relative shrink-0 text-[#14120b] text-[30px] whitespace-nowrap"
-            style={{ fontFamily: "'Bodoni 72', 'Bodoni MT', Georgia, serif" }}
-            data-node-id="72:155"
+            className="font-['Cursor_Gothic:Italic',sans-serif] italic leading-normal relative shrink-0 text-[#14120b] text-[30px] whitespace-nowrap"
+            data-node-id="80:567"
           >
             Cafe Cursor Toronto
           </h1>
