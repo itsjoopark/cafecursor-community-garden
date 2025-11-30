@@ -1,0 +1,18 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 49 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame_Add_Polaroid" filter="url(#filter0_d_77_551)">
+<rect x="4.5" y="0.5" width="39.9516" height="36.1" rx="7.5" stroke="var(--stroke-0, #BFBFBF)" shape-rendering="crispEdges"/>
+<path id="Vector" d="M14 22.825V23.8937C14 24.7441 14.3556 25.5596 14.9885 26.1609C15.6215 26.7622 16.4799 27.1 17.375 27.1H28.625C29.5201 27.1 30.3786 26.7622 31.0115 26.1609C31.6444 25.5596 32 24.7441 32 23.8937V22.825M27.5 18.55L23 22.825M23 22.825L18.5 18.55M23 22.825V10" stroke="var(--stroke-0, #3F3F46)" stroke-width="2.565" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<defs>
+<filter id="filter0_d_77_551" x="0" y="0" width="48.9516" height="45.1" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_77_551"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_77_551" result="shape"/>
+</filter>
+</defs>
+</svg>

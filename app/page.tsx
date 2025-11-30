@@ -647,6 +647,18 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Save Canvas Button - Fixed at bottom left */}
+      <div className="fixed bottom-[50px] left-[20px] md:left-[50px] z-30">
+        <button
+          onClick={() => alert('Save Canvas feature - Coming soon!')}
+          className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg w-12 h-12 flex items-center justify-center text-[#14120b] font-['Cursor_Gothic:Regular',sans-serif] text-[21px] hover:bg-white/80 transition-colors shadow-lg"
+          aria-label="Save canvas"
+          title="Save canvas"
+        >
+          ⤓
+        </button>
+      </div>
+
       {/* Zoom Controls - Fixed at bottom right - Closer to edge on mobile */}
       <div className="fixed bottom-[50px] right-[20px] md:right-[50px] z-30 flex flex-col gap-2">
         <button
