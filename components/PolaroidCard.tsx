@@ -568,7 +568,7 @@ export default function PolaroidCard({
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
                 maxLength={45}
-                placeholder="type in your message"
+                placeholder="what are you building today?"
                 className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '9.947px' }}
                 data-node-id="70:81"
@@ -580,7 +580,7 @@ export default function PolaroidCard({
                 onClick={handleDescriptionClick}
                 data-node-id="70:81"
               >
-                {description || 'type in your message'}
+                {description || 'what are you building today?'}
               </p>
             )}
           </div>
@@ -679,7 +679,7 @@ export default function PolaroidCard({
                 onChange={handleDescriptionChange}
                 onBlur={handleDescriptionBlur}
                 maxLength={45}
-                placeholder="type in your message"
+                placeholder="what are you building today?"
                 className="font-['Cursor_Gothic:Regular',sans-serif] text-black w-full text-center bg-transparent border-none outline-none placeholder:text-gray-400"
                 style={{ fontSize: '16px' }}
               />
@@ -689,7 +689,7 @@ export default function PolaroidCard({
                 style={{ fontSize: '8.25px' }}
                 onClick={handleDescriptionClick}
               >
-                {description || 'type in your message'}
+                {description || 'what are you building today?'}
               </p>
             )}
           </div>
