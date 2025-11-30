@@ -52,6 +52,7 @@ export default function PolaroidCard({
   const descriptionRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showDeleteOverlay, setShowDeleteOverlay] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
@@ -305,6 +306,8 @@ export default function PolaroidCard({
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
+      onMouseEnter={() => !isDragging && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Card Content Container */}
       <div ref={cardContentRef} className="w-full h-full">
@@ -552,6 +555,42 @@ export default function PolaroidCard({
         onChange={handleFileChange}
         className="hidden"
       />
+
+      {/* Hover Delete Button - Appears 15px below card */}
+      {hasCustomImage && (
+        <div
+          className="absolute left-1/2 transform -translate-x-1/2 pointer-events-auto"
+          style={{
+            top: 'calc(100% + 15px)',
+            opacity: isHovered ? 1 : 0,
+            transform: isHovered 
+              ? 'translateX(-50%) translateY(0)' 
+              : 'translateX(-50%) translateY(-10px)',
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            pointerEvents: isHovered ? 'auto' : 'none',
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (window.confirm('Delete this polaroid card?')) {
+                onDelete?.()
+              }
+            }}
+            className="bg-[#d9d9d9] box-border flex flex-col gap-[10px] items-center px-[10px] py-[5px] rounded-[16px] hover:bg-[#c5c5c5] transition-colors"
+            style={{
+              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+            }}
+            data-name="Button_Delete"
+            data-node-id="80:650"
+            aria-label="Delete card"
+          >
+            <p className="font-['Cursor_Gothic:Regular',sans-serif] leading-normal text-[15px] text-black text-center whitespace-pre">
+              ❌
+            </p>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
