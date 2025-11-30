@@ -14,9 +14,11 @@ interface PolaroidCardProps {
   initialDescription?: string
   initialImageUrl?: string
   initialDateStamp?: string
+  initialOverlayText?: string
   onTitleChange?: (title: string) => void
   onDescriptionChange?: (description: string) => void
   onImageChange?: (imageUrl: string) => void
+  onOverlayTextChange?: (overlayText: string) => void
   isSelected?: boolean
   onDragStart?: () => void
   onDragEnd?: () => void
@@ -30,9 +32,11 @@ export default function PolaroidCard({
   initialDescription = '',
   initialImageUrl = defaultImageFrame,
   initialDateStamp = '',
+  initialOverlayText = '',
   onTitleChange,
   onDescriptionChange,
   onImageChange,
+  onOverlayTextChange,
   isSelected = false,
   onDragStart,
   onDragEnd,
@@ -47,22 +51,26 @@ export default function PolaroidCard({
   const [description, setDescription] = useState(initialDescription)
   const [imageUrl, setImageUrl] = useState(initialImageUrl)
   const [dateStamp, setDateStamp] = useState(initialDateStamp)
+  const [overlayText, setOverlayText] = useState(initialOverlayText)
+  const [showEditOverlay, setShowEditOverlay] = useState(false)
+  const [isEditingOverlayText, setIsEditingOverlayText] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const cardContentRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLInputElement>(null)
+  const overlayTextRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [showDeleteOverlay, setShowDeleteOverlay] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const hideButtonTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const hideOverlayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Check if image has been customized (not the default)
   const hasCustomImage = imageUrl !== defaultImageFrame
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Don't start drag if clicking on input fields, image, or delete overlay
+    // Don't start drag if clicking on input fields, image, or edit overlay
     const target = e.target as HTMLElement
-    if (target.tagName === 'INPUT' || target.closest('[data-image-frame]') || target.closest('[data-delete-overlay]')) {
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.closest('[data-image-frame]') || target.closest('[data-edit-overlay]')) {
       return
     }
 
@@ -204,9 +212,21 @@ export default function PolaroidCard({
 
   const handleImageClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // If image has been uploaded, show delete overlay instead
+    // If image has been uploaded, show edit overlay
     if (hasCustomImage) {
-      setShowDeleteOverlay(true)
+      setShowEditOverlay(true)
+      // Clear any existing hide timeout
+      if (hideOverlayTimeoutRef.current) {
+        clearTimeout(hideOverlayTimeoutRef.current)
+        hideOverlayTimeoutRef.current = null
+      }
+      // Start 3-second auto-hide timer
+      hideOverlayTimeoutRef.current = setTimeout(() => {
+        if (!isEditingOverlayText) {
+          setShowEditOverlay(false)
+        }
+        hideOverlayTimeoutRef.current = null
+      }, 3000)
       return
     }
     // Otherwise, allow image upload
@@ -215,29 +235,66 @@ export default function PolaroidCard({
 
   const handleImageTouch = (e: React.TouchEvent) => {
     e.stopPropagation()
-    // If image has been uploaded, show delete overlay instead
+    // If image has been uploaded, show edit overlay
     if (hasCustomImage) {
-      setShowDeleteOverlay(true)
+      setShowEditOverlay(true)
+      // Clear any existing hide timeout
+      if (hideOverlayTimeoutRef.current) {
+        clearTimeout(hideOverlayTimeoutRef.current)
+        hideOverlayTimeoutRef.current = null
+      }
+      // Start 3-second auto-hide timer
+      hideOverlayTimeoutRef.current = setTimeout(() => {
+        if (!isEditingOverlayText) {
+          setShowEditOverlay(false)
+        }
+        hideOverlayTimeoutRef.current = null
+      }, 3000)
       return
     }
     // Otherwise, allow image upload
     fileInputRef.current?.click()
   }
 
-  const handleDeleteClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleEditOverlayClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation()
-    if (window.confirm('Are you sure you want to delete this card?')) {
-      onDelete?.()
+    // Start editing overlay text
+    setIsEditingOverlayText(true)
+    // Clear the auto-hide timer when starting to edit
+    if (hideOverlayTimeoutRef.current) {
+      clearTimeout(hideOverlayTimeoutRef.current)
+      hideOverlayTimeoutRef.current = null
     }
-    setShowDeleteOverlay(false)
   }
 
-  const handleOverlayClick = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleOverlayTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value
+    setOverlayText(newText)
+  }
+
+  const handleOverlayTextBlur = () => {
+    setIsEditingOverlayText(false)
+    // Save the overlay text
+    onOverlayTextChange?.(overlayText)
+    // Start auto-hide timer after editing
+    if (hideOverlayTimeoutRef.current) {
+      clearTimeout(hideOverlayTimeoutRef.current)
+    }
+    hideOverlayTimeoutRef.current = setTimeout(() => {
+      setShowEditOverlay(false)
+      hideOverlayTimeoutRef.current = null
+    }, 3000)
+  }
+
+  const handleOverlayBackgroundClick = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation()
-    // Clicking on overlay (not the delete text) closes it
-    const target = e.target as HTMLElement
-    if (!target.closest('[data-delete-text]')) {
-      setShowDeleteOverlay(false)
+    // Clicking on overlay background closes it if not editing
+    if (!isEditingOverlayText) {
+      setShowEditOverlay(false)
+      if (hideOverlayTimeoutRef.current) {
+        clearTimeout(hideOverlayTimeoutRef.current)
+        hideOverlayTimeoutRef.current = null
+      }
     }
   }
 
@@ -281,6 +338,13 @@ export default function PolaroidCard({
   }, [isEditingDescription])
 
   useEffect(() => {
+    if (isEditingOverlayText && overlayTextRef.current) {
+      overlayTextRef.current.focus()
+      overlayTextRef.current.select()
+    }
+  }, [isEditingOverlayText])
+
+  useEffect(() => {
     if (dragStart.x !== 0 || dragStart.y !== 0) {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', handleMouseUp)
@@ -296,11 +360,14 @@ export default function PolaroidCard({
     }
   }, [dragStart, dragOffset, isDragging, initialPosition, onPositionChange])
 
-  // Cleanup timeout on unmount
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (hideButtonTimeoutRef.current) {
         clearTimeout(hideButtonTimeoutRef.current)
+      }
+      if (hideOverlayTimeoutRef.current) {
+        clearTimeout(hideOverlayTimeoutRef.current)
       }
     }
   }, [])
@@ -372,22 +439,51 @@ export default function PolaroidCard({
               crossOrigin="anonymous"
             />
             
-            {/* Delete Overlay - Shows when user clicks on image */}
-            {showDeleteOverlay && hasCustomImage && (
+            {/* Edit Overlay - Shows when user clicks on image */}
+            {showEditOverlay && hasCustomImage && (
               <div 
-                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
-                data-delete-overlay
-                onClick={handleOverlayClick}
-                onTouchEnd={handleOverlayClick}
+                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm"
+                data-edit-overlay
+                onClick={handleOverlayBackgroundClick}
+                onTouchEnd={handleOverlayBackgroundClick}
               >
-                <div 
-                  className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
-                  data-delete-text
-                  onClick={handleDeleteClick}
-                  onTouchEnd={handleDeleteClick}
-                >
-                  <p className="leading-normal whitespace-pre">Delete?</p>
-                </div>
+                {!isEditingOverlayText ? (
+                  // Show pencil icon when not editing
+                  <div 
+                    className="flex flex-col items-center justify-center"
+                    onClick={handleEditOverlayClick}
+                    onTouchEnd={handleEditOverlayClick}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11.0531 3.94689L16.0531 8.94689M13.5 1.5C14.0304 0.969716 14.7548 0.671875 15.5106 0.671875C16.2664 0.671875 16.9909 0.969716 17.5213 1.5C18.0516 2.03028 18.3494 2.75476 18.3494 3.51061C18.3494 4.26647 18.0516 4.99095 17.5213 5.52123L4.18085 18.8617L0 20L1.13829 15.8191L14.4788 2.47873C14.744 2.21343 15.0591 2.00283 15.4059 1.85858C15.7527 1.71434 16.1245 1.63916 16.5 1.63916C16.8755 1.63916 17.2473 1.71434 17.5941 1.85858C17.9409 2.00283 18.256 2.21343 18.5213 2.47873L13.5 1.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                ) : (
+                  // Show textarea when editing
+                  <textarea
+                    ref={overlayTextRef}
+                    value={overlayText}
+                    onChange={handleOverlayTextChange}
+                    onBlur={handleOverlayTextBlur}
+                    maxLength={150}
+                    placeholder="Add a caption..."
+                    className="w-[90%] h-[50%] bg-white/90 text-black text-center p-4 rounded-lg border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px]"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                  />
+                )}
+                
+                {/* Display saved overlay text when not editing and text exists */}
+                {!isEditingOverlayText && overlayText && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p className="font-['Cursor_Gothic:Regular',sans-serif] text-white text-center text-[14px] leading-relaxed break-words">
+                      {overlayText}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
@@ -491,22 +587,51 @@ export default function PolaroidCard({
               crossOrigin="anonymous"
             />
             
-            {/* Delete Overlay - Shows when user clicks on image */}
-            {showDeleteOverlay && hasCustomImage && (
+            {/* Edit Overlay - Shows when user clicks on image */}
+            {showEditOverlay && hasCustomImage && (
               <div 
-                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex items-center justify-center cursor-pointer"
-                data-delete-overlay
-                onClick={handleOverlayClick}
-                onTouchEnd={handleOverlayClick}
+                className="absolute inset-0 bg-[rgba(67,65,60,0.5)] flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm"
+                data-edit-overlay
+                onClick={handleOverlayBackgroundClick}
+                onTouchEnd={handleOverlayBackgroundClick}
               >
-                <div 
-                  className="flex flex-col font-['Cursor_Gothic:Regular',sans-serif] justify-end leading-[0] text-[15px] text-white cursor-pointer"
-                  data-delete-text
-                  onClick={handleDeleteClick}
-                  onTouchEnd={handleDeleteClick}
-                >
-                  <p className="leading-normal whitespace-pre">Delete?</p>
-                </div>
+                {!isEditingOverlayText ? (
+                  // Show pencil icon when not editing
+                  <div 
+                    className="flex flex-col items-center justify-center"
+                    onClick={handleEditOverlayClick}
+                    onTouchEnd={handleEditOverlayClick}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11.0531 3.94689L16.0531 8.94689M13.5 1.5C14.0304 0.969716 14.7548 0.671875 15.5106 0.671875C16.2664 0.671875 16.9909 0.969716 17.5213 1.5C18.0516 2.03028 18.3494 2.75476 18.3494 3.51061C18.3494 4.26647 18.0516 4.99095 17.5213 5.52123L4.18085 18.8617L0 20L1.13829 15.8191L14.4788 2.47873C14.744 2.21343 15.0591 2.00283 15.4059 1.85858C15.7527 1.71434 16.1245 1.63916 16.5 1.63916C16.8755 1.63916 17.2473 1.71434 17.5941 1.85858C17.9409 2.00283 18.256 2.21343 18.5213 2.47873L13.5 1.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                ) : (
+                  // Show textarea when editing
+                  <textarea
+                    ref={overlayTextRef}
+                    value={overlayText}
+                    onChange={handleOverlayTextChange}
+                    onBlur={handleOverlayTextBlur}
+                    maxLength={150}
+                    placeholder="Add a caption..."
+                    className="w-[90%] h-[50%] bg-white/90 text-black text-center p-4 rounded-lg border-none outline-none resize-none font-['Cursor_Gothic:Regular',sans-serif] text-[14px]"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => e.stopPropagation()}
+                  />
+                )}
+                
+                {/* Display saved overlay text when not editing and text exists */}
+                {!isEditingOverlayText && overlayText && (
+                  <div 
+                    className="absolute inset-0 flex items-center justify-center p-8 pointer-events-none"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p className="font-['Cursor_Gothic:Regular',sans-serif] text-white text-center text-[14px] leading-relaxed break-words">
+                      {overlayText}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             

@@ -15,6 +15,7 @@ export interface Card {
   description: string
   image_url: string
   date_stamp: string
+  overlay_text?: string
   created_at: string
 }
 

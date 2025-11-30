@@ -13,6 +13,7 @@ interface Card {
   description: string
   imageUrl: string
   dateStamp?: string
+  overlayText?: string
 }
 
 interface Stamp {
@@ -192,6 +193,15 @@ export default function Home() {
     
     // Update in database
     await updateCard(cardId, { description: newDescription })
+  }
+
+  const handleCardOverlayTextChange = async (cardId: string, newOverlayText: string) => {
+    setCards(cards.map(card =>
+      card.id === cardId ? { ...card, overlayText: newOverlayText } : card
+    ))
+    
+    // Update in database
+    await updateCard(cardId, { overlay_text: newOverlayText })
   }
 
   const handleCardImageChange = async (cardId: string, newImageUrl: string) => {
@@ -508,7 +518,8 @@ export default function Home() {
         title: dbCard.title,
         description: dbCard.description,
         imageUrl: dbCard.image_url,
-        dateStamp: dbCard.date_stamp
+        dateStamp: dbCard.date_stamp,
+        overlayText: dbCard.overlay_text
       }))
       setCards(formattedCards)
     }
@@ -535,7 +546,8 @@ export default function Home() {
             title: newCard.title,
             description: newCard.description,
             imageUrl: newCard.image_url,
-            dateStamp: newCard.date_stamp
+            dateStamp: newCard.date_stamp,
+            overlayText: newCard.overlay_text
           }]
         })
       },
@@ -553,7 +565,8 @@ export default function Home() {
                   title: updatedCard.title,
                   description: updatedCard.description,
                   imageUrl: updatedCard.image_url,
-                  dateStamp: updatedCard.date_stamp
+                  dateStamp: updatedCard.date_stamp,
+                  overlayText: updatedCard.overlay_text
                 }
               : card
           )
@@ -727,9 +740,11 @@ export default function Home() {
                 initialDescription={card.description}
                 initialImageUrl={card.imageUrl}
                 initialDateStamp={card.dateStamp}
+                initialOverlayText={card.overlayText}
                 onTitleChange={(newTitle) => handleCardTitleChange(card.id, newTitle)}
                 onDescriptionChange={(newDesc) => handleCardDescriptionChange(card.id, newDesc)}
                 onImageChange={(newImageUrl) => handleCardImageChange(card.id, newImageUrl)}
+                onOverlayTextChange={(newOverlayText) => handleCardOverlayTextChange(card.id, newOverlayText)}
                 onDelete={() => handleCardDelete(card.id)}
                 isSelected={draggingCardId === card.id}
                 onDragStart={() => setDraggingCardId(card.id)}
