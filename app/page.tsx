@@ -511,7 +511,7 @@ export default function Home() {
         <div 
           className="absolute inset-0 origin-top-left"
           style={{
-            backgroundImage: `radial-gradient(circle, rgba(20, 18, 11, 0.35) 2px, transparent 2px)`,
+            backgroundImage: `radial-gradient(circle, rgba(20, 18, 11, ${Math.max(0.08, Math.min(0.35, zoom * 0.35))}) 2px, transparent 2px)`,
             backgroundSize: `${100 * zoom}px ${100 * zoom}px`,
             backgroundPosition: `${canvasOffset.x}px ${canvasOffset.y}px`,
             cursor: (isPanning || isSpacebarHeld) ? (isPanning ? 'grabbing' : 'grab') : 'default',
