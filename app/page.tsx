@@ -217,10 +217,14 @@ export default function Home() {
       if (distance < 30) return // Minimum distance between stamps
     }
     
+    // Randomly select an emoji from the array
+    const emojiArray = ['😊', '🍁', '🌁', '🥐', '🦾', '🦝', '🌿', '⛰️', '❤️']
+    const randomEmoji = emojiArray[Math.floor(Math.random() * emojiArray.length)]
+    
     const newStamp: Stamp = {
       id: `stamp-${Date.now()}-${Math.random().toString(36).substring(7)}`,
       position: { x: worldX, y: worldY },
-      emoji: '😊'
+      emoji: randomEmoji
     }
     
     setStamps(prev => [...prev, newStamp])
