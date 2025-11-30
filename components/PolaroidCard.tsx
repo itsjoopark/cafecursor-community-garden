@@ -273,9 +273,9 @@ export default function PolaroidCard({
     
     try {
       // Find the Polaroid card content element
-      const cardContent = cardContentRef.current.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
+      const originalCard = cardContentRef.current.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
       
-      if (!cardContent) {
+      if (!originalCard) {
         console.error('Card content not found')
         setIsSharing(false)
         return
@@ -285,86 +285,85 @@ export default function PolaroidCard({
       const wasDeleteOverlayVisible = showDeleteOverlay
       if (showDeleteOverlay) {
         setShowDeleteOverlay(false)
-        await new Promise(resolve => setTimeout(resolve, 50))
+        await new Promise(resolve => setTimeout(resolve, 100))
       }
 
-      // Wait for images to load with proper error handling
-      const images = cardContent.querySelectorAll('img')
+      // Create a clean clone for capturing
+      const clone = originalCard.cloneNode(true) as HTMLElement
+      
+      // Create a clean container for the clone
+      const captureContainer = document.createElement('div')
+      captureContainer.style.position = 'fixed'
+      captureContainer.style.left = '-9999px'
+      captureContainer.style.top = '0'
+      captureContainer.style.zIndex = '-1'
+      captureContainer.style.backgroundColor = '#ffffff'
+      captureContainer.style.padding = '20px'
+      
+      // Clean up the clone - remove all transforms and transitions
+      clone.style.transform = 'none'
+      clone.style.transition = 'none'
+      clone.style.position = 'relative'
+      clone.style.margin = '0'
+      clone.style.boxShadow = 'none'
+      
+      // Remove delete overlays from clone
+      const deleteOverlays = clone.querySelectorAll('[data-delete-overlay]')
+      deleteOverlays.forEach(overlay => overlay.remove())
+      
+      // Fix image frame background - make transparent when there's a custom image
+      const imageFrames = clone.querySelectorAll('[data-image-frame]')
+      imageFrames.forEach((frame: HTMLElement) => {
+        if (hasCustomImage) {
+          frame.style.backgroundColor = 'transparent'
+        }
+      })
+      
+      // Ensure all images are visible
+      const images = clone.querySelectorAll('img')
+      images.forEach((img: HTMLImageElement) => {
+        img.style.display = 'block'
+        img.style.visibility = 'visible'
+        img.style.opacity = '1'
+        img.style.objectFit = 'cover'
+      })
+      
+      // Add clone to container and container to body
+      captureContainer.appendChild(clone)
+      document.body.appendChild(captureContainer)
+      
+      // Wait for layout and images to settle
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Ensure all images in original card are loaded before capturing clone
+      const originalImages = originalCard.querySelectorAll('img')
       await Promise.all(
-        Array.from(images).map((img) => {
+        Array.from(originalImages).map((img) => {
           if (img.complete) return Promise.resolve()
           return new Promise((resolve) => {
             img.onload = () => resolve(true)
             img.onerror = () => resolve(false)
-            // Longer timeout for images to load
             setTimeout(() => resolve(false), 3000)
           })
         })
       )
-
-      // Store original styles to restore later
-      const cardContainer = cardRef.current
-      const originalTransform = cardContainer?.style.transform || ''
-      const originalTransition = cardContainer?.style.transition || ''
       
-      // Temporarily remove transforms and transitions for clean capture
-      if (cardContainer) {
-        cardContainer.style.transform = 'none'
-        cardContainer.style.transition = 'none'
-      }
-      
-      // Wait longer for layout to stabilize (150-200ms as recommended)
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
-      // Capture with enhanced configuration
-      const canvas = await html2canvas(cardContent, {
+      // Capture the clean clone
+      const canvas = await html2canvas(clone, {
         backgroundColor: '#ffffff',
-        scale: 2, // High quality
+        scale: 2,
         useCORS: true,
         allowTaint: true,
-        imageTimeout: 0, // No timeout for image loading
+        imageTimeout: 0,
         logging: false,
-        width: cardContent.offsetWidth,
-        height: cardContent.offsetHeight,
-        windowWidth: cardContent.offsetWidth,
-        windowHeight: cardContent.offsetHeight,
-        onclone: (clonedDoc) => {
-          // Clean up the cloned element for proper capture
-          const clonedElement = clonedDoc.querySelector('[data-name="Polaroid Card - Backpane (White)"]') as HTMLElement
-          if (clonedElement) {
-            clonedElement.style.transform = 'none'
-            clonedElement.style.position = 'relative'
-            clonedElement.style.isolation = 'isolate'
-          }
-          
-          // Ensure all images in clone have proper attributes
-          const clonedImages = clonedDoc.querySelectorAll('img')
-          clonedImages.forEach((img: HTMLImageElement) => {
-            img.style.display = 'block'
-            img.style.visibility = 'visible'
-            img.style.opacity = '1'
-          })
-          
-          // Remove any delete overlays from clone
-          const deleteOverlays = clonedDoc.querySelectorAll('[data-delete-overlay]')
-          deleteOverlays.forEach(overlay => overlay.remove())
-          
-          // Ensure image frames don't have black backgrounds visible
-          const imageFrames = clonedDoc.querySelectorAll('[data-image-frame]')
-          imageFrames.forEach((frame: HTMLElement) => {
-            // Only keep black background if there's no custom image
-            if (hasCustomImage) {
-              frame.style.backgroundColor = 'transparent'
-            }
-          })
-        }
+        width: clone.offsetWidth,
+        height: clone.offsetHeight,
+        windowWidth: clone.offsetWidth,
+        windowHeight: clone.offsetHeight
       })
       
-      // Restore original styles
-      if (cardContainer) {
-        cardContainer.style.transform = originalTransform
-        cardContainer.style.transition = originalTransition
-      }
+      // Clean up - remove the container
+      document.body.removeChild(captureContainer)
       
       // Restore delete overlay state
       if (wasDeleteOverlayVisible) {
