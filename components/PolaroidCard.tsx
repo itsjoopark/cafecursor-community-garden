@@ -751,9 +751,7 @@ export default function PolaroidCard({
                 clearTimeout(hideButtonTimeoutRef.current)
                 hideButtonTimeoutRef.current = null
               }
-              if (window.confirm('Delete this polaroid card?')) {
-                onDelete?.()
-              }
+              onDelete?.()
             }}
             className="bg-[#ebeae5] box-border flex gap-[10px] items-center p-[10px] rounded-[25px] hover:bg-[#ddd9ce] transition-colors"
             style={{
