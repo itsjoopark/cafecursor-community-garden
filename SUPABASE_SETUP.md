@@ -139,3 +139,5 @@ Your app is now configured to use Supabase for:
 
 Enjoy your collaborative Polaroid card canvas! 📸
 
+
+

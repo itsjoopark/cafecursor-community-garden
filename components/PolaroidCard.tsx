@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useRef, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, getOptimizedImageUrl } from '@/lib/supabase'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
 const trashIcon = "/assets/55b01994f4fd191d870dfd4f983d47ffd50168dd.svg"
@@ -433,10 +433,12 @@ export default function PolaroidCard({
             onTouchEnd={handleImageTouch}
           >
             <img 
-              src={imageUrl}
+              src={getOptimizedImageUrl(imageUrl, { width: 600, height: 600, quality: 85 })}
               alt="Polaroid"
               className="block w-full h-full object-cover"
               crossOrigin="anonymous"
+              loading="lazy"
+              decoding="async"
             />
             
             {/* Edit Overlay - Shows when user clicks on image */}
@@ -581,10 +583,12 @@ export default function PolaroidCard({
             onTouchEnd={handleImageTouch}
           >
             <img 
-              src={imageUrl}
+              src={getOptimizedImageUrl(imageUrl, { width: 600, height: 600, quality: 85 })}
               alt="Polaroid"
               className="block w-full h-full object-cover"
               crossOrigin="anonymous"
+              loading="lazy"
+              decoding="async"
             />
             
             {/* Edit Overlay - Shows when user clicks on image */}
