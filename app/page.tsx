@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
 import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards, subscribeToDragging, broadcastDragging } from '@/lib/supabase'
@@ -35,6 +35,7 @@ export default function Home() {
   const [isSpacebarHeld, setIsSpacebarHeld] = useState(false)
   const [isStampMode, setIsStampMode] = useState(false)
   const [isStamping, setIsStamping] = useState(false)
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
@@ -49,6 +50,49 @@ export default function Home() {
 
   const MIN_ZOOM = 0.1
   const MAX_ZOOM = 3
+
+  // PERFORMANCE OPTIMIZATION: Filter visible cards based on viewport
+  // Only render cards that are within or near the visible viewport
+  const visibleCards = useMemo(() => {
+    if (viewportSize.width === 0 || viewportSize.height === 0) {
+      // Viewport not initialized yet, render all cards on first load
+      return cards
+    }
+
+    // Add buffer zone around viewport (render cards slightly outside viewport)
+    const BUFFER = 500 // pixels
+    const cardWidth = window.innerWidth >= 768 ? 281 : 232
+    const cardHeight = window.innerWidth >= 768 ? 333.221 : 275
+
+    // Calculate viewport bounds in world coordinates
+    const viewportLeft = (-canvasOffset.x / zoom) - BUFFER
+    const viewportRight = ((viewportSize.width - canvasOffset.x) / zoom) + BUFFER
+    const viewportTop = (-canvasOffset.y / zoom) - BUFFER
+    const viewportBottom = ((viewportSize.height - canvasOffset.y) / zoom) + BUFFER
+
+    // Filter cards that intersect with viewport bounds
+    const visible = cards.filter((card) => {
+      // Always render the card being dragged
+      if (draggingCardId === card.id) {
+        return true
+      }
+
+      const cardLeft = card.position.x - (cardWidth / 2)
+      const cardRight = card.position.x + (cardWidth / 2)
+      const cardTop = card.position.y - (cardHeight / 2)
+      const cardBottom = card.position.y + (cardHeight / 2)
+
+      return (
+        cardRight >= viewportLeft &&
+        cardLeft <= viewportRight &&
+        cardBottom >= viewportTop &&
+        cardTop <= viewportBottom
+      )
+    })
+
+    console.log(`🎯 Viewport culling: Rendering ${visible.length} of ${cards.length} cards`)
+    return visible
+  }, [cards, canvasOffset, zoom, viewportSize, draggingCardId])
 
   const handleCameraButtonClick = () => {
     // Trigger file input immediately on button click for mobile compatibility
@@ -121,7 +165,7 @@ export default function Home() {
         
         if (saved) {
           // Add card to local state (will also be received via real-time subscription)
-          setCards([...cards, newCard])
+        setCards([...cards, newCard])
         } else {
           alert('Failed to save card. Please try again.')
         }
@@ -491,10 +535,12 @@ export default function Home() {
     }
   }, [isSpacebarHeld])
 
-  // Load all cards from database on mount
+  // Load cards from database on mount (with limit for performance)
   useEffect(() => {
     const loadCards = async () => {
-      const dbCards = await getAllCards()
+      // Load most recent 200 cards initially for better performance
+      // Real-time subscriptions will add any new cards as they're created
+      const dbCards = await getAllCards(200)
       const formattedCards: Card[] = dbCards.map(dbCard => ({
         id: dbCard.id,
         variant: dbCard.variant,
@@ -506,6 +552,7 @@ export default function Home() {
         overlayText: dbCard.overlay_text
       }))
       setCards(formattedCards)
+      console.log(`📦 Loaded ${formattedCards.length} most recent cards`)
     }
     
     loadCards()
@@ -583,6 +630,23 @@ export default function Home() {
       unsubscribe()
       unsubscribeDragging()
     }
+  }, [])
+
+  // Track viewport size for performance optimizations
+  useEffect(() => {
+    const updateViewportSize = () => {
+      setViewportSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      })
+    }
+
+    // Initialize viewport size
+    updateViewportSize()
+
+    // Update on window resize
+    window.addEventListener('resize', updateViewportSize)
+    return () => window.removeEventListener('resize', updateViewportSize)
   }, [])
 
   return (
@@ -673,8 +737,8 @@ export default function Home() {
             transform: `translate(${canvasOffset.x}px, ${canvasOffset.y}px) scale(${zoom})`,
           }}
         >
-          {/* Render all Polaroid cards at their world positions */}
-          {cards.map((card) => (
+          {/* Render visible Polaroid cards (viewport culling for performance) */}
+          {visibleCards.map((card) => (
             <div 
               key={card.id}
               data-card-container

@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, memo } from 'react'
 import { supabase, getOptimizedImageUrl } from '@/lib/supabase'
 
 const defaultImageFrame = "/assets/178af05f21285175ff0b012f2a44f278cd7b626c.svg"
@@ -25,7 +25,7 @@ interface PolaroidCardProps {
   onDelete?: () => void
 }
 
-export default function PolaroidCard({ 
+function PolaroidCard({ 
   initialPosition = { x: 0, y: 0 }, 
   onPositionChange,
   initialTitle = '',
@@ -778,4 +778,21 @@ export default function PolaroidCard({
     </div>
   )
 }
+
+// Export with React.memo for performance optimization
+// Prevents unnecessary re-renders when props haven't changed
+export default memo(PolaroidCard, (prevProps, nextProps) => {
+  // Custom comparison function for optimal re-render prevention
+  return (
+    prevProps.initialPosition?.x === nextProps.initialPosition?.x &&
+    prevProps.initialPosition?.y === nextProps.initialPosition?.y &&
+    prevProps.initialTitle === nextProps.initialTitle &&
+    prevProps.initialDescription === nextProps.initialDescription &&
+    prevProps.initialImageUrl === nextProps.initialImageUrl &&
+    prevProps.initialDateStamp === nextProps.initialDateStamp &&
+    prevProps.initialOverlayText === nextProps.initialOverlayText &&
+    prevProps.isSelected === nextProps.isSelected
+    // Note: Callback props (onPositionChange, etc.) are not compared as they're typically stable
+  )
+})
 
