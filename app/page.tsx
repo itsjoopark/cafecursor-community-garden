@@ -36,6 +36,9 @@ export default function Home() {
   const [isStampMode, setIsStampMode] = useState(false)
   const [isStamping, setIsStamping] = useState(false)
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
+  const [hasMoreCards, setHasMoreCards] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [currentOffset, setCurrentOffset] = useState(50)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
@@ -60,7 +63,7 @@ export default function Home() {
     }
 
     // Add buffer zone around viewport (render cards slightly outside viewport)
-    const BUFFER = 500 // pixels
+    const BUFFER = 300 // pixels - reduced for better performance
     const cardWidth = window.innerWidth >= 768 ? 281 : 232
     const cardHeight = window.innerWidth >= 768 ? 333.221 : 275
 
@@ -187,9 +190,9 @@ export default function Home() {
       card.id === cardId ? { ...card, position: newPosition } : card
     ))
     
-    // Broadcast position in real-time while dragging (throttled to 50ms)
+    // Broadcast position in real-time while dragging (throttled to 100ms for performance)
     const now = Date.now()
-    if (now - lastBroadcastTime.current > 50) {
+    if (now - lastBroadcastTime.current > 100) {
       broadcastDragging(cardId, newPosition, userId.current)
       lastBroadcastTime.current = now
     }
@@ -535,12 +538,46 @@ export default function Home() {
     }
   }, [isSpacebarHeld])
 
+  // Load more cards function for pagination
+  const loadMoreCards = async () => {
+    if (isLoadingMore || !hasMoreCards) return
+    
+    setIsLoadingMore(true)
+    try {
+      const dbCards = await getAllCards(50, currentOffset)
+      
+      if (dbCards.length === 0) {
+        setHasMoreCards(false)
+        console.log('📦 No more cards to load')
+        return
+      }
+      
+      const formattedCards: Card[] = dbCards.map(dbCard => ({
+        id: dbCard.id,
+        variant: dbCard.variant,
+        position: { x: dbCard.position_x, y: dbCard.position_y },
+        title: dbCard.title,
+        description: dbCard.description,
+        imageUrl: dbCard.image_url,
+        dateStamp: dbCard.date_stamp,
+        overlayText: dbCard.overlay_text
+      }))
+      
+      setCards(prevCards => [...prevCards, ...formattedCards])
+      setCurrentOffset(prev => prev + 50)
+      console.log(`📦 Loaded ${formattedCards.length} more cards (total: ${cards.length + formattedCards.length})`)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }
+
   // Load cards from database on mount (with limit for performance)
   useEffect(() => {
     const loadCards = async () => {
-      // Load most recent 200 cards initially for better performance
+      // Load most recent 50 cards initially for faster startup
       // Real-time subscriptions will add any new cards as they're created
-      const dbCards = await getAllCards(200)
+      // Users can load more by clicking the "Load More" button
+      const dbCards = await getAllCards(50)
       const formattedCards: Card[] = dbCards.map(dbCard => ({
         id: dbCard.id,
         variant: dbCard.variant,
@@ -552,6 +589,7 @@ export default function Home() {
         overlayText: dbCard.overlay_text
       }))
       setCards(formattedCards)
+      setHasMoreCards(dbCards.length === 50) // If less than 50, no more cards
       console.log(`📦 Loaded ${formattedCards.length} most recent cards`)
     }
     
@@ -830,6 +868,31 @@ export default function Home() {
           😊
         </button>
       </div>
+
+      {/* Load More Button - Fixed at top right */}
+      {hasMoreCards && (
+        <div className="fixed top-[140px] right-[20px] md:right-[50px] z-30">
+          <button
+            onClick={loadMoreCards}
+            disabled={isLoadingMore}
+            className="bg-white/60 backdrop-blur-sm border border-gray-300 rounded-lg px-4 py-2 flex items-center gap-2 text-[#14120b] font-['Cursor_Gothic:Regular',sans-serif] text-sm hover:bg-white/80 transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Load more cards"
+            title="Load more cards from the database"
+          >
+            {isLoadingMore ? (
+              <>
+                <div className="w-4 h-4 border-2 border-[#14120b] border-t-transparent rounded-full animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <>
+                <span>Load More</span>
+                <span className="text-xs opacity-60">({cards.length} loaded)</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Zoom Controls - Fixed at bottom right - Closer to edge on mobile */}
       <div className="fixed bottom-[50px] right-[20px] md:right-[50px] z-30 flex flex-col gap-2">

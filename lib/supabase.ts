@@ -3,7 +3,26 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with optimized configuration
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: false, // Don't persist sessions for better performance
+    autoRefreshToken: false,
+  },
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {
+      'x-client-info': 'cursor-promo',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10, // Limit real-time events for performance
+    },
+  },
+})
 
 // Database types for type safety
 export interface Card {
@@ -56,7 +75,7 @@ async function compressImage(file: File): Promise<Blob> {
         
         ctx?.drawImage(img, 0, 0, width, height)
         
-        // Convert to blob with compression (0.85 quality = good balance)
+        // Convert to blob with compression (0.75 quality = better performance)
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -66,7 +85,7 @@ async function compressImage(file: File): Promise<Blob> {
             }
           },
           'image/jpeg',
-          0.85
+          0.75
         )
       }
       img.onerror = () => reject(new Error('Failed to load image'))
@@ -125,7 +144,8 @@ export function getOptimizedImageUrl(imageUrl: string, options?: {
     return imageUrl
   }
 
-  const { width = 600, height = 600, quality = 80 } = options || {}
+  // More aggressive defaults for better performance
+  const { width = 500, height = 500, quality = 75 } = options || {}
   
   // Add Supabase image transformation parameters
   const url = new URL(imageUrl)
@@ -133,6 +153,7 @@ export function getOptimizedImageUrl(imageUrl: string, options?: {
   url.searchParams.set('height', height.toString())
   url.searchParams.set('quality', quality.toString())
   url.searchParams.set('resize', 'contain') // Maintain aspect ratio
+  url.searchParams.set('format', 'webp') // Use WebP format for better compression
   
   return url.toString()
 }
@@ -205,8 +226,8 @@ export async function deleteCard(cardId: string): Promise<boolean> {
   }
 }
 
-// Get all cards from database with optional limit for performance
-export async function getAllCards(limit?: number): Promise<Card[]> {
+// Get all cards from database with optional limit and offset for performance
+export async function getAllCards(limit?: number, offset?: number): Promise<Card[]> {
   try {
     let query = supabase
       .from('cards')
@@ -216,6 +237,11 @@ export async function getAllCards(limit?: number): Promise<Card[]> {
     // Apply limit if specified for better performance on initial load
     if (limit) {
       query = query.limit(limit)
+    }
+
+    // Apply offset for pagination
+    if (offset) {
+      query = query.range(offset, offset + (limit || 50) - 1)
     }
 
     const { data, error } = await query

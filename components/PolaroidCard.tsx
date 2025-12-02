@@ -433,7 +433,7 @@ function PolaroidCard({
             onTouchEnd={handleImageTouch}
           >
             <img 
-              src={getOptimizedImageUrl(imageUrl, { width: 600, height: 600, quality: 85 })}
+              src={getOptimizedImageUrl(imageUrl, { width: 500, height: 500, quality: 75 })}
               alt="Polaroid"
               className="block w-full h-full object-cover"
               crossOrigin="anonymous"
@@ -583,7 +583,7 @@ function PolaroidCard({
             onTouchEnd={handleImageTouch}
           >
             <img 
-              src={getOptimizedImageUrl(imageUrl, { width: 600, height: 600, quality: 85 })}
+              src={getOptimizedImageUrl(imageUrl, { width: 500, height: 500, quality: 75 })}
               alt="Polaroid"
               className="block w-full h-full object-cover"
               crossOrigin="anonymous"
