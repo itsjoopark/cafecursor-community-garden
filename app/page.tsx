@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import PolaroidCard from '@/components/PolaroidCard'
 import StickyNoteToolbar from '@/components/StickyNoteToolbar'
+import CustomCursor from '@/components/CustomCursor'
 import { uploadImage, saveCard, updateCard, deleteCard, getAllCards, subscribeToCards, subscribeToDragging, broadcastDragging } from '@/lib/supabase'
 
 interface Card {
@@ -650,7 +651,7 @@ export default function Home() {
   }, [])
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden">
+    <main className="relative min-h-screen w-full flex flex-col items-center overflow-hidden cursor-none md:cursor-none">
       {/* Fixed Header - New Design with Logo and Cafe Name */}
       <div 
         className="fixed top-[50px] left-1/2 transform -translate-x-1/2 z-30 flex flex-col gap-[5px] items-center"
@@ -899,6 +900,9 @@ export default function Home() {
           <span> for cursor with cursor</span>
         </p>
       </div>
+
+      {/* Custom Cursor (Desktop Only) */}
+      <CustomCursor />
     </main>
   )
 }
