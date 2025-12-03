@@ -39,11 +39,13 @@ export default function Home() {
   const [hasMoreCards, setHasMoreCards] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [currentOffset, setCurrentOffset] = useState(50)
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pendingCardVariant = useRef<'dark' | 'light' | null>(null)
   const lastBroadcastTime = useRef<number>(0)
   const lastStampPosition = useRef<{ x: number; y: number } | null>(null)
+  const initialCardIds = useRef<Set<string>>(new Set())
   
   // Generate a unique user ID for this session
   const userId = useRef<string>('')
@@ -588,9 +590,18 @@ export default function Home() {
         dateStamp: dbCard.date_stamp,
         overlayText: dbCard.overlay_text
       }))
+      
+      // Store initial card IDs for bounce animation
+      formattedCards.forEach(card => initialCardIds.current.add(card.id))
+      
       setCards(formattedCards)
       setHasMoreCards(dbCards.length === 50) // If less than 50, no more cards
       console.log(`📦 Loaded ${formattedCards.length} most recent cards`)
+      
+      // Mark initial load complete after animation time (600ms + max delay)
+      setTimeout(() => {
+        setInitialLoadComplete(true)
+      }, 1500)
     }
     
     loadCards()
@@ -776,7 +787,13 @@ export default function Home() {
           }}
         >
           {/* Render visible Polaroid cards (viewport culling for performance) */}
-          {visibleCards.map((card) => (
+          {visibleCards.map((card, index) => {
+            // Check if this card should show bounce animation (initial load only)
+            const isInitialCard = initialCardIds.current.has(card.id) && !initialLoadComplete
+            // Stagger animation based on card index (max 20 cards with stagger for performance)
+            const animationDelay = isInitialCard ? Math.min(index * 30, 600) : 0
+            
+            return (
             <div 
               key={card.id}
               data-card-container
@@ -815,10 +832,13 @@ export default function Home() {
                 onDelete={() => handleCardDelete(card.id)}
                 isSelected={draggingCardId === card.id}
                 onDragStart={() => setDraggingCardId(card.id)}
+                shouldAnimate={isInitialCard}
+                animationDelay={animationDelay}
                 onDragEnd={() => setDraggingCardId(null)}
               />
             </div>
-          ))}
+            )
+          })}
 
           {/* Render all stamps at their world positions */}
           {stamps.map((stamp) => (

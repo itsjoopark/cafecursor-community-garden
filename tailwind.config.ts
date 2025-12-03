@@ -14,12 +14,27 @@ const config: Config = {
       },
       animation: {
         wiggle: 'wiggle 0.5s ease-in-out',
+        'bounce-in': 'bounceIn 0.6s ease-out',
       },
       keyframes: {
         wiggle: {
           '0%, 100%': { transform: 'rotate(0deg)' },
           '25%': { transform: 'rotate(-1deg)' },
           '75%': { transform: 'rotate(1deg)' },
+        },
+        bounceIn: {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(-20px) scale(0.95)',
+          },
+          '50%': { 
+            opacity: '1',
+            transform: 'translateY(5px) scale(1.02)',
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0) scale(1)',
+          },
         },
       },
       fontFamily: {

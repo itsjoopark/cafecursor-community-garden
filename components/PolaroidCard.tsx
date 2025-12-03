@@ -23,6 +23,8 @@ interface PolaroidCardProps {
   onDragStart?: () => void
   onDragEnd?: () => void
   onDelete?: () => void
+  animationDelay?: number // Delay in ms for staggered bounce animation
+  shouldAnimate?: boolean // Whether to show bounce animation
 }
 
 function PolaroidCard({ 
@@ -40,7 +42,9 @@ function PolaroidCard({
   isSelected = false,
   onDragStart,
   onDragEnd,
-  onDelete
+  onDelete,
+  animationDelay = 0,
+  shouldAnimate = false
 }: PolaroidCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
@@ -375,12 +379,13 @@ function PolaroidCard({
   return (
     <div 
       ref={cardRef}
-      className="relative w-full h-full"
+      className={`relative w-full h-full ${shouldAnimate ? 'animate-bounce-in' : ''}`}
       style={{ 
         transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',
         transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+        animationDelay: shouldAnimate ? `${animationDelay}ms` : undefined,
       }}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -791,7 +796,9 @@ export default memo(PolaroidCard, (prevProps, nextProps) => {
     prevProps.initialImageUrl === nextProps.initialImageUrl &&
     prevProps.initialDateStamp === nextProps.initialDateStamp &&
     prevProps.initialOverlayText === nextProps.initialOverlayText &&
-    prevProps.isSelected === nextProps.isSelected
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.animationDelay === nextProps.animationDelay &&
+    prevProps.shouldAnimate === nextProps.shouldAnimate
     // Note: Callback props (onPositionChange, etc.) are not compared as they're typically stable
   )
 })
