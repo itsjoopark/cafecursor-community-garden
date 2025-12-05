@@ -714,10 +714,10 @@ export default function Home() {
           data-node-id="72:154"
         >
           <h1 
-            className="font-['Cursor_Gothic:Italic',sans-serif] italic leading-normal relative shrink-0 text-[#14120b] text-[30px] whitespace-nowrap"
-            data-node-id="80:567"
+            className="font-['Comic_Sans_MS:Bold',sans-serif] leading-normal relative shrink-0 text-[#14120b] text-[45px] whitespace-nowrap"
+            data-node-id="143:29"
           >
-            Cafe Cursor Toronto
+            airess
           </h1>
         </div>
 
